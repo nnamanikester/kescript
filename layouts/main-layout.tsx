@@ -7,7 +7,7 @@ interface MainLayoutProps {
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
     <>
-      <div>
+      <div className="main-layout">
         <main>{children}</main>
       </div>
     </>

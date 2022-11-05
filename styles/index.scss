@@ -22,6 +22,12 @@ body {
   color: $white-color;
 }
 
+.main-layout {
+  // display: flex;
+  vertical-align: middle;
+  align-items: center;
+}
+
 a,
 a:hover,
 a:visited,
