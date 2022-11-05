@@ -1,0 +1,44 @@
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: $white-color;
+  font-weight: 300;
+}
+
+h1 {
+  font-size: 3.2rem;
+}
+
+p {
+  line-height: 2.8rem;
+  color: $text-color;
+  font-weight: 300;
+}
+
+.title {
+  font-size: 2rem;
+  position: relative;
+  z-index: 1;
+  font-weight: 400;
+  padding: 2rem 0;
+
+  span {
+    color: $primary-color;
+
+    &::before {
+      content: "";
+      position: absolute;
+      width: 3rem;
+      height: 3rem;
+      background: linear-gradient(135deg, rgba(255, 152, 0, 0.15) 0%, rgba(255, 152, 0, 0.01) 100%);
+      ;
+      border-radius: 100%;
+      z-index: -1;
+      left: -1.2rem;
+      top: 2.5rem;
+    }
+  }
+}

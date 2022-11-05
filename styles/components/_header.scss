@@ -1,0 +1,38 @@
+.header {
+  margin-right: 1rem;
+
+  .nav {
+    background-color: $background-color;
+    list-style: none;
+    border-radius: .5rem;
+
+    li {
+      padding: 1.5rem 1rem;
+      position: relative;
+
+      a {
+        color: $white-color;
+        display: inline-block;
+        text-align: center;
+        width: 100%;
+        height: 100%;
+
+        .icon {
+          font-size: 1.5rem;
+        }
+
+        span {
+          display: block;
+          text-transform: uppercase;
+          font-size: 1rem;
+          font-weight: 300;
+        }
+
+        &:hover,
+        &.active {
+          color: $primary-color;
+        }
+      }
+    }
+  }
+}

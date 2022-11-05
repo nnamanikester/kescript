@@ -1,0 +1,83 @@
+@function randomNum($min, $max) {
+  $rand: random();
+  $num: $min + floor($rand * (($max - $min) + 1));
+
+  @return $num;
+}
+
+.bg-bubble {
+  height: 100vh;
+  width: 100vw;
+  background: linear-gradient(to bottom right, #17171b 0%, #28282f 100%);
+  position: absolute;
+  overflow: hidden;
+  top: 0;
+  z-index: -9;
+
+  .social {
+    position: absolute;
+    opacity: .8;
+
+    @for $i from 1 through 54 {
+      $bgpos: if($i % 2==0, top right, center);
+      $size: randomNum(1, 10);
+
+      &:nth-child(#{$i}) {
+        width: $size + rem;
+        height: $size + rem;
+        left: random(100) + vw;
+        bottom: random(100) + vh;
+        animation: move+$i infinite randomNum(5, 15) + s;
+      }
+
+
+      @keyframes move#{$i} {
+        0% {
+          bottom: -100px;
+        }
+
+        100% {
+          bottom: random(100) + vh;
+          transform: translate(randomNum(-100, 200) + px, 0);
+          opacity: 0;
+        }
+      }
+    }
+  }
+
+
+  div {
+    display: block;
+    border-radius: 100%;
+    opacity: 0.8;
+    position: absolute;
+
+    @for $i from 55 through 64 {
+
+      $bgpos: if($i % 2==0, top right, center);
+      $size: randomNum(5, 100);
+
+      &:nth-child(#{$i}) {
+        background: radial-gradient(ellipse at $bgpos, $text-color 0%, $background-color 46%, $background-color 100%);
+        width: $size + px;
+        height: $size + px;
+        left: random(100) + vw;
+        bottom: random(100) + vh;
+        animation: move+$i infinite randomNum(3, 15) + s;
+      }
+
+
+      @keyframes move#{$i} {
+        0% {
+          bottom: -100px;
+        }
+
+        100% {
+          bottom: random(100) + vh;
+          transform: translate(randomNum(-100, 200) + px, 0);
+          opacity: 0;
+        }
+      }
+    }
+  }
+}

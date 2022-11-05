@@ -1,0 +1,109 @@
+.hero-card {
+  background-color: $background-color;
+  height: 105%;
+  border-radius: .5rem;
+  position: relative;
+  transform: translateY(-1.5rem);
+
+  &::before {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: $background-color;
+    opacity: .5;
+    border-radius: .5rem;
+    transform: translate(-1.5rem, -1.5rem);
+    z-index: -1;
+  }
+
+  &__header {
+    position: relative;
+    width: 100%;
+    height: 50%;
+  }
+
+  &__slider {
+    background: url('../../public/images/github-bg.png') no-repeat center;
+    background-size: cover;
+    width: 100%;
+    height: 100%;
+    clip-path: polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%);
+    border-radius: .5rem;
+  }
+
+  &__image {
+    width: 14rem;
+    height: 14rem;
+    position: relative;
+    bottom: 10rem;
+    left: 35%;
+    z-index: 2;
+
+    img {
+      width: 100%;
+      height: 100%;
+      border-radius: 100%;
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 100%;
+      background-color: $primary-color;
+      transform: translate(-1rem, 1rem);
+      top: 0;
+      left: 0;
+      opacity: .3;
+      z-index: -1;
+    }
+  }
+
+  &__body {
+    margin-top: 7rem;
+    text-align: center;
+  }
+
+  &__job-title {
+    color: $primary-color;
+    @include typed("Software Engineer",
+      "React Native Developer",
+      "Devop Engineer",
+      "Blockchain Enthusiast",
+      0.7, (caret-width: 0));
+  }
+
+  &__social {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    margin: 1.5rem 0;
+
+    li {
+      margin: 0 1rem;
+
+      a {
+        color: $white-color;
+      }
+    }
+  }
+
+  &__footer {
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+
+    ul {
+      list-style: none;
+      display: flex;
+
+
+      li {
+        position: relative;
+        width: 50%;
+      }
+    }
+  }
+}

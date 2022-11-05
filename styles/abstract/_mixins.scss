@@ -1,0 +1,73 @@
+@mixin respond($breakpoint) {
+  /*************************************
+  Media query breakpoint for really small 
+  screen size below 320px
+  ****/
+
+  @if ($breakpoint==mobile-s) {
+    @media screen and (max-width: 320px) {
+      @content;
+    }
+  }
+
+  @if ($breakpoint==mobile-m) {
+    @media screen and (max-width: 375px) {
+      @content;
+    }
+  }
+
+  @if ($breakpoint==mobile-l) {
+    @media screen and (max-width: 425px) {
+      @content;
+    }
+  }
+
+  @if ($breakpoint==mobile-xl) {
+    @media screen and (max-width: 640px) {
+      @content;
+    }
+  }
+
+  @if ($breakpoint==tablet-port) {
+    @media only screen and (max-width: 840px) {
+      @content;
+    }
+  }
+
+  @if ($breakpoint==tablet-land) {
+    @media only screen and (max-width: 960px) {
+      @content;
+    }
+  }
+
+  @if ($breakpoint==laptop-s) {
+    @media only screen and (max-width: 1160px) {
+      @content;
+    }
+  }
+
+  @if ($breakpoint==laptop-l) {
+    @media only screen and (max-width: 1440px) {
+      @content;
+    }
+  }
+
+  @if ($breakpoint==viewport-h) {
+    @media only screen and (max-height: 1200px) {
+      @content;
+    }
+  }
+}
+
+@mixin newpage {
+  width: 100%;
+  opacity: 0;
+  position: absolute;
+  transform: translateX(-100rem);
+  transition: all 1s ease-in-out;
+
+  &:target {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

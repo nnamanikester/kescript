@@ -1,0 +1,71 @@
+.container {
+  max-width: 1268px;
+  max-height: 674px;
+  margin: 15vh auto;
+  height: 85vh;
+  width: 100%;
+  transition: all .4s ease-in-out;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  height: 100%;
+}
+
+[class^="col-"] {
+  display: block;
+  position: relative;
+
+  @include respond(tablet-port) {
+    width: 100% !important;
+  }
+}
+
+.col-12 {
+  width: calc(100%)
+}
+
+.col-11 {
+  width: calc((100% / 12) * 11)
+}
+
+.col-10 {
+  width: calc((100% / 12) * 10)
+}
+
+.col-9 {
+  width: calc((100% / 12) * 9)
+}
+
+.col-8 {
+  width: calc((100% / 12) * 8)
+}
+
+.col-7 {
+  width: calc((100% / 12) * 7)
+}
+
+.col-6 {
+  width: calc((100% / 12) * 6)
+}
+
+.col-5 {
+  width: calc((100% / 12) * 5)
+}
+
+.col-4 {
+  width: calc((100% / 12) * 4)
+}
+
+.col-3 {
+  width: calc((100% / 12) * 3)
+}
+
+.col-2 {
+  width: calc((100% / 12) * 2)
+}
+
+.col-1 {
+  width: calc(100% / 12)
+}
