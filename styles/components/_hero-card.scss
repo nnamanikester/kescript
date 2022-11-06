@@ -3,6 +3,8 @@
   height: 105%;
   border-radius: .5rem;
   position: relative;
+  box-shadow: .4rem .2rem 2rem -0.3rem #0002;
+  z-index: 9;
   transform: translateY(-1.5rem);
 
   &::before {

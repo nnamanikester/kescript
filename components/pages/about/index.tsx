@@ -2,21 +2,27 @@ import * as React from "react";
 import cx from "classnames";
 import Router, { useRouter } from "next/router";
 import Image from "next/image";
+import Quote from "../../Quote";
 
 interface AboutProps {}
 
 const About: React.FC<AboutProps> = () => {
   const [showPage, setShowPage] = React.useState(true);
 
+  const changePage = () => {
+    if (document.location.hash == "" || document.location.hash == "#") {
+      setShowPage(true);
+    } else {
+      setShowPage(false);
+    }
+  };
+
   React.useEffect(() => {
+    changePage();
     window.addEventListener("hashchange", (e) => {
       e.preventDefault();
 
-      if (document.location.hash == "" || document.location.hash == "#") {
-        setShowPage(true);
-      } else {
-        setShowPage(false);
-      }
+      changePage();
     });
   }, []);
 
@@ -358,6 +364,23 @@ const About: React.FC<AboutProps> = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="page-container">
+        <h1 className="title mt-3">
+          <span>Q</span>uote
+        </h1>
+      </div>
+
+      <div className="divider line__bottom-left" />
+
+      <div className="page-container pt-2">
+        <Quote
+          name="John Nnamani"
+          title="Software Engineer"
+          text="Lorem ipsum dolor sit amet consectetur adipisicing elit. Laboriosam corporis accusamus laudantium repellat sunt vel voluptatibus dignissimos dolore libero quis labore,"
+          photo={require("/public/images/profile.png")}
+        />
       </div>
     </div>
   );

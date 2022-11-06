@@ -9,6 +9,8 @@ const Header: React.FC<HeaderProps> = () => {
   >("");
 
   React.useEffect(() => {
+    setPage(document.location.hash as any);
+
     window.addEventListener("hashchange", (e) => {
       e.preventDefault();
       setPage(document.location.hash as any);

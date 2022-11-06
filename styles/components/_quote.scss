@@ -1,0 +1,57 @@
+.quote {
+  text-align: center;
+  margin-bottom: 4rem;
+
+  .text {
+    position: relative;
+    padding: 0 4rem;
+    font-weight: 200;
+    font-style: italic;
+    font-size: 1.5rem;
+
+    &::before {
+      background: url(../../public/images/quote_d.svg) no-repeat;
+      background-size: contain;
+      content: "";
+      position: absolute;
+      height: 1.4rem;
+      width: 1.4rem;
+      opacity: .65;
+      left: 0;
+    }
+
+    &::after {
+      background: url(../../public/images/quote_d.svg) no-repeat;
+      background-size: contain;
+      content: "";
+      position: absolute;
+      height: 1.4rem;
+      width: 1.4rem;
+      transform: scale(-1);
+      opacity: .65;
+      right: 0;
+    }
+  }
+
+  .avatar {
+    margin-top: 2rem;
+    margin-bottom: 1.2rem;
+
+    img {
+      border-radius: 100%;
+      width: 6rem;
+      height: 6rem;
+    }
+  }
+
+  .name {
+    font-size: 1.7rem;
+  }
+
+  .title {
+    font-weight: 300;
+    font-size: 1.4rem;
+    height: 0;
+    display: inline;
+  }
+}

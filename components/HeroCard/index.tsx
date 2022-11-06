@@ -13,8 +13,8 @@ const HeroCard: React.FC<HeroCardProps> = () => {
             <Image
               src={require("/public/images/profile.png")}
               alt="Profile"
-              width={100}
-              height={100}
+              width={400}
+              height={400}
             />
           </div>
         </div>

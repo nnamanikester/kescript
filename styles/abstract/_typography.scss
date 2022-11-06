@@ -42,3 +42,23 @@ p {
     }
   }
 }
+
+.title-2 {
+  font-size: 1.7rem;
+  position: relative;
+  z-index: 1;
+  font-weight: 300;
+  padding: 2rem 0;
+  text-transform: uppercase;
+
+  span {
+    &:first-child {
+      margin-right: 1rem;
+    }
+
+    &.icon {
+      font-size: 2.5rem;
+      color: $primary-color;
+    }
+  }
+}
