@@ -1,6 +1,12 @@
 .header {
   margin-right: 1rem;
 
+  @include respond(viewport-h) {
+    position: sticky;
+    top: 2rem;
+    left: 0;
+  }
+
   .nav {
     background-color: $background-color;
     list-style: none;

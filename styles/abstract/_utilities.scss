@@ -463,6 +463,14 @@ PADDINGS
   font-weight: 300;
   text-transform: uppercase;
   font-size: 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: inline-block;
+
+  &:hover {
+    color: $primary-color;
+  }
 }
 
 .uppercase {

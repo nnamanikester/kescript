@@ -1,0 +1,30 @@
+.form {
+
+  .input {
+    width: 100%;
+    min-height: 5rem;
+    background-color: transparent;
+    border: none;
+    font-family: Poppins;
+    outline: none;
+    color: $white-color;
+    font-weight: 300;
+    font-size: 1.7rem;
+    border-bottom: .15rem solid $text-color;
+    resize: none;
+
+    &::placeholder {
+      color: $text-color;
+    }
+
+    &:focus {
+      border-bottom: .15rem solid $primary-color;
+      transition: all .1s ease-in-out;
+
+      &::placeholder {
+        color: $white-color;
+      }
+    }
+
+  }
+}

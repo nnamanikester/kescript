@@ -10,24 +10,29 @@
     list-style: none;
     display: inline-flex;
     flex-wrap: wrap;
+    justify-content: space-between;
 
     li {
-      width: 50%;
+      min-width: 50%;
       margin-bottom: 1rem;
 
       .property {
         text-transform: uppercase;
         color: $white-color;
+        font-weight: 300;
+        font-size: 1.5rem;
       }
 
       .separator {
-        margin-right: 2rem;
-        margin-left: .5rem;
+        margin-right: 1rem;
+        margin-left: .2rem;
         letter-spacing: .5rem;
       }
 
       .value {
         color: $text-color;
+        font-weight: 300;
+        font-size: 1.5rem;
       }
     }
   }

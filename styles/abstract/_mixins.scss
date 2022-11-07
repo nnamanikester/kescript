@@ -53,7 +53,7 @@
   }
 
   @if ($breakpoint==viewport-h) {
-    @media only screen and (max-height: 1200px) {
+    @media only screen and (max-width: 1200px) {
       @content;
     }
   }
@@ -65,6 +65,14 @@
   position: absolute;
   transform: translateX(-100rem);
   transition: all 1s ease-in-out;
+
+  @include respond(viewport-h) {
+    position: static;
+    opacity: 1;
+    transform: translateX(0);
+    transition: none;
+    margin-top: 1rem;
+  }
 
   &:target {
     opacity: 1;

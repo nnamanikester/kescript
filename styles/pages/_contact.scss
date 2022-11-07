@@ -1,3 +1,61 @@
 #contact {
   @include newpage;
+
+
+  .mapouter {
+    position: relative;
+    text-align: right;
+    width: 100%;
+    height: 25rem;
+
+    .gmap_canvas {
+      overflow: hidden;
+      background: none !important;
+      width: 100%;
+      height: 25rem;
+    }
+
+    .gmap_iframe {
+      height: 25rem !important;
+    }
+  }
+
+  .property-list {
+    list-style: none;
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+
+    li {
+      min-width: 40%;
+      margin-bottom: 1rem;
+
+      .property {
+        text-transform: uppercase;
+        color: $white-color;
+        font-size: 1.4rem;
+        font-weight: 300;
+      }
+
+      .separator {
+        margin-right: 1rem;
+        margin-left: .5rem;
+        letter-spacing: .2rem;
+      }
+
+      .value {
+        color: $text-color;
+        font-weight: 300;
+        font-size: 1.4rem;
+
+        a {
+          color: $text-color;
+
+          &:hover {
+            color: $primary-color;
+          }
+        }
+      }
+    }
+  }
 }

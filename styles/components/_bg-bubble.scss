@@ -23,10 +23,10 @@
       $size: randomNum(1, 10);
 
       &:nth-child(#{$i}) {
-        width: $size + rem;
-        height: $size + rem;
-        left: random(100) + vw;
-        bottom: random(100) + vh;
+        width: #{$size}rem;
+        height: #{$size}rem;
+        left: #{random(100)}vw;
+        bottom: #{random(100)}vh;
         animation: move+$i infinite randomNum(5, 15) + s;
       }
 

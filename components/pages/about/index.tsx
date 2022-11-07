@@ -40,7 +40,7 @@ const About: React.FC<AboutProps> = () => {
       <div className="divider line__bottom-left" />
 
       <div className="page-container">
-        <p className="pt-2">
+        <p className="pt-3">
           I am Ryan Adlard, web designer from USA, California. I have rich
           experience in web site design and building and customization, also I
           am good at wordpress. I love to talk with you about our unique.

@@ -18,7 +18,7 @@ const Works: React.FC<WorksProps> = () => {
 
   return (
     <div id="works" className="page-content">
-      <div className="page-container header">
+      <div className="page-container work-header">
         <h1 className="title">
           <span>R</span>ecent Works
         </h1>

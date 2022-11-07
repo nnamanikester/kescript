@@ -12,6 +12,7 @@
 
 html {
   font-size: 10px;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -20,12 +21,20 @@ body {
   background: linear-gradient(to bottom right, #17171b 0%, #28282f 100%);
   overflow: hidden;
   color: $white-color;
+
+  @include respond(viewport-h) {
+    overflow-y: visible;
+  }
 }
 
 .main-layout {
   display: flex;
   align-items: center;
   height: 100vh;
+
+  @include respond(viewport-h) {
+    display: block;
+  }
 
   >main {
     width: 100%;

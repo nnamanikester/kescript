@@ -1,5 +1,9 @@
 .hero {
   width: 38% !important;
+
+  @include respond(viewport-h) {
+    width: 85% !important;
+  }
 }
 
 .hero-card {
@@ -10,6 +14,12 @@
   box-shadow: .4rem .2rem 2rem -0.3rem #0002;
   z-index: 9;
   transform: translateY(-1.5rem);
+
+  @include respond(viewport-h) {
+    height: 65rem;
+    margin-top: 2rem;
+    margin-bottom: -1rem;
+  }
 
   &::before {
     content: "";

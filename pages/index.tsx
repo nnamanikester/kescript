@@ -20,7 +20,7 @@ const Home = () => {
   return (
     <div>
       <div className="container">
-        <div className="row">
+        <div className="row page-row">
           <Header />
           <div className="col-5 hero">
             <HeroCard />
