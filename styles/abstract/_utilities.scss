@@ -81,10 +81,6 @@
   }
 }
 
-.divider {
-  position: relative;
-}
-
 /***************************************************
 ****************************************************
 MARGINS
@@ -435,4 +431,36 @@ PADDINGS
     padding-left: 16rem;
     padding-right: 16rem;
   }
+}
+
+.divider {
+  position: relative;
+  height: .1rem;
+}
+
+.bold {
+  font-weight: 400;
+}
+
+.note {
+  font-size: 1.4rem;
+}
+
+.text-white {
+  color: $white-color;
+}
+
+.text-grey {
+  color: $grey-color;
+}
+
+.center {
+  text-align: center;
+}
+
+.link {
+  color: $white-color;
+  font-weight: 300;
+  text-transform: uppercase;
+  font-size: 1.5rem;
 }
