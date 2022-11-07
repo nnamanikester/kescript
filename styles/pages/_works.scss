@@ -1,6 +1,21 @@
 #works {
   @include newpage;
 
+  [class^="col-"] {
+    @include respond(mobile-xl) {
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+
+  [class~='line__right-bottom'] {
+    @include respond(mobile-xl) {
+      &::after {
+        display: none !important;
+      }
+    }
+  }
+
   >.work-header {
     display: flex;
     flex-wrap: wrap;

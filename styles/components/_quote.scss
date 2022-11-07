@@ -9,6 +9,10 @@
     font-style: italic;
     font-size: 1.5rem;
 
+    @include respond(mobile-xl) {
+      padding: 0 2rem;
+    }
+
     &::before {
       background: url(../../public/images/quote_d.svg) no-repeat;
       background-size: contain;
@@ -29,7 +33,7 @@
       width: 1.4rem;
       transform: scale(-1);
       opacity: .65;
-      right: 0;
+      right: 1rem;
     }
   }
 

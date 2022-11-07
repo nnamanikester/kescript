@@ -98,3 +98,9 @@
 .col-1 {
   width: calc(100% / 12)
 }
+
+.col-sm-6 {
+  @include respond(mobile-xl) {
+    width: calc((100% / 12) * 6);
+  }
+}

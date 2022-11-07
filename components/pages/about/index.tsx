@@ -116,7 +116,7 @@ const About: React.FC<AboutProps> = () => {
               </p>
             </div>
           </div>
-          <div className="col-6 py-2 px-3 line__bottom-left">
+          <div className="col-6 py-2 px-3">
             <div className="feature">
               <div className="feature-icon mb-2">
                 <span className="icon fa fa-user"></span>
@@ -142,7 +142,7 @@ const About: React.FC<AboutProps> = () => {
 
       <div className="page-container--full-width">
         <div className="row">
-          <div className="col-3 line__right-top p-2">
+          <div className="col-3 col-sm-6 p-2">
             <div className="fact">
               <div className="fact-icon">
                 <span className="icon fa fa-user"></span>
@@ -150,7 +150,7 @@ const About: React.FC<AboutProps> = () => {
               <h3 className="fact-title">80 Albums Listened</h3>
             </div>
           </div>
-          <div className="col-3 line__right-top p-2">
+          <div className="col-3 col-sm-6 line__left-top p-2">
             <div className="fact">
               <div className="fact-icon">
                 <span className="icon fa fa-user"></span>
@@ -158,7 +158,7 @@ const About: React.FC<AboutProps> = () => {
               <h3 className="fact-title">15 Awards Won</h3>
             </div>
           </div>
-          <div className="col-3 line__right-top p-2">
+          <div className="col-3 col-sm-6 line__left-top p-2">
             <div className="fact">
               <div className="fact-icon">
                 <span className="icon fa fa-user"></span>
@@ -166,7 +166,7 @@ const About: React.FC<AboutProps> = () => {
               <h3 className="fact-title">1000 Cups of Coffee</h3>
             </div>
           </div>
-          <div className="col-3 p-2">
+          <div className="col-3 col-sm-6 p-2 line__left-top">
             <div className="fact">
               <div className="fact-icon">
                 <span className="icon fa fa-user"></span>
@@ -185,7 +185,7 @@ const About: React.FC<AboutProps> = () => {
 
       <div className="divider line__bottom-left" />
 
-      <div className="page-container">
+      <div className="page-container page-container--sm-full-width">
         <div className="row">
           <div className="col-3 line__right-top p-2">
             <div className="favorite">

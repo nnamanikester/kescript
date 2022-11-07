@@ -1,6 +1,21 @@
 #resume {
   @include newpage;
 
+  [class^="col-"] {
+    @include respond(mobile-xl) {
+      padding-left: 0;
+      padding-right: 2rem;
+    }
+  }
+
+  [class~='line__right-top'] {
+    @include respond(mobile-xl) {
+      &::after {
+        display: none !important;
+      }
+    }
+  }
+
   .experience {
     position: relative;
     padding-bottom: 2rem;

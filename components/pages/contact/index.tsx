@@ -77,7 +77,7 @@ const Contact: React.FC<ContactProps> = () => {
         <form action="#" className="mb-4">
           <div className="form mt-3">
             <div className="row">
-              <div className="col-6 pr-1">
+              <div className="col-6 pr-1 mb-sm-2">
                 <input
                   className="input"
                   placeholder="Full Name"

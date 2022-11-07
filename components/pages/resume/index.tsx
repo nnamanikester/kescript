@@ -104,8 +104,8 @@ const Resume: React.FC<ResumeProps> = () => {
       <div className="divider line__bottom-left" />
 
       <div className="page-container">
-        <div className="row mb-4">
-          <div className="col-6 line__right-top pr-3">
+        <div className="row">
+          <div className="col-6 line__right-top pr-3  mb-4">
             <h3 className="line__bottom-left title-2 mb-2">
               <span className="icon fa fa-briefcase"></span>
               <span>Tools</span>

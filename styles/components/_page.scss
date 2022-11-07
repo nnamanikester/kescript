@@ -10,6 +10,8 @@
 
   @include respond(mobile-xl) {
     margin: 0 auto;
+    max-width: 40rem;
+    width: 100% !important;
   }
 
   .page-content {
@@ -29,6 +31,12 @@
       &--full-width {
         width: 100%;
         margin: 0 auto;
+      }
+
+      &--sm-full-width {
+        @include respond(mobile-xl) {
+          width: 100%;
+        }
       }
     }
   }

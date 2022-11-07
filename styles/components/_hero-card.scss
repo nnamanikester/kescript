@@ -7,6 +7,8 @@
 
   @include respond(mobile-xl) {
     margin: 0 auto;
+    max-width: 40rem;
+    width: 100% !important;
   }
 }
 
