@@ -1,6 +1,13 @@
 #about {
   @include newpage;
 
+  [class^="col-"] {
+    @include respond(mobile-xl) {
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+  }
+
   &.open-page {
     opacity: 1;
     transform: translateX(0);
