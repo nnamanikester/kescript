@@ -41,9 +41,17 @@ const About: React.FC<AboutProps> = () => {
 
       <div className="page-container">
         <p className="pt-3">
-          I am Ryan Adlard, web designer from USA, California. I have rich
-          experience in web site design and building and customization, also I
-          am good at wordpress. I love to talk with you about our unique.
+          I am John Nnamani, a Software Engineer who is keen on problem-solving.
+          I have most of my strength in converting UI designs pixel-to-pixel to
+          actual software and enhancing user experience.
+        </p>
+        <br />
+        <p>
+          Despite the fact that I enjoy working solo, I&apos;ve found working
+          with teams equally rewarding because I feel it&apos;s one of the most
+          effective ways to harness human resources. I&apos;m looking for
+          projects that are challenging enough if completed would be considered
+          magical.
         </p>
 
         <ul className="property-list pt-2">
