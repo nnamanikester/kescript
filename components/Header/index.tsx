@@ -19,6 +19,10 @@ const Header: React.FC<HeaderProps> = () => {
 
   return (
     <header className="header">
+      <div className="mobile-header">
+        <h3>John Nnamani</h3>
+        <h5 className="mobile-header__job-title"></h5>
+      </div>
       <ul className="nav">
         <li>
           <a

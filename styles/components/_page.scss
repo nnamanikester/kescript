@@ -8,6 +8,10 @@
     width: 85% !important;
   }
 
+  @include respond(mobile-xl) {
+    margin: 0 auto;
+  }
+
   .page-content {
     height: 100%;
     border-radius: 0 .5rem .5rem 0;

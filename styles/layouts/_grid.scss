@@ -11,6 +11,10 @@
     height: auto;
     padding-top: 1rem;
   }
+
+  @include respond(mobile-xl) {
+    padding-top: 0;
+  }
 }
 
 .page-row {
@@ -21,6 +25,10 @@
 
   @include respond(viewport-h) {
     justify-content: flex-end;
+  }
+
+  @include respond(mobile-xl) {
+    display: block !important;
   }
 }
 
@@ -64,7 +72,11 @@
 }
 
 .col-6 {
-  width: calc((100% / 12) * 6)
+  width: calc((100% / 12) * 6);
+
+  @include respond(mobile-xl) {
+    width: 100%;
+  }
 }
 
 .col-5 {

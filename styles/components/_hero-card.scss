@@ -4,6 +4,10 @@
   @include respond(viewport-h) {
     width: 85% !important;
   }
+
+  @include respond(mobile-xl) {
+    margin: 0 auto;
+  }
 }
 
 .hero-card {
@@ -21,6 +25,10 @@
     margin-bottom: -1rem;
   }
 
+  @include respond(mobile-xl) {
+    margin-top: 3rem;
+  }
+
   &::before {
     content: "";
     position: absolute;
@@ -31,6 +39,10 @@
     border-radius: .5rem;
     transform: translate(-1.5rem, -1.5rem);
     z-index: -1;
+
+    @include respond(mobile-xl) {
+      display: none;
+    }
   }
 
   &__header {
