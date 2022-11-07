@@ -7,3 +7,12 @@ export interface IWork {
   image: NodeRequire;
   content: React.ReactNode;
 }
+
+export interface IArticle {
+  id: number | string;
+  title: string;
+  exerpt: string;
+  image: NodeRequire;
+  content: React.ReactNode;
+  date: Date | string | number;
+}

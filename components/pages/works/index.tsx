@@ -1,55 +1,13 @@
 import Image from "next/image";
 import * as React from "react";
 import cx from "classnames";
-import Rodicash from "../../works/Rodicash";
-import EvianBliss from "../../works/EvianBliss";
-import Shopking from "../../works/Shopking";
-import { IWork, TabType } from "../../../types";
+import { TabType } from "../../../types";
 import { useWorkStore } from "../../../state";
-import ShopkingMobile from "../../works/ShopkingMobile";
+import works from "../../../db/works";
 
 interface WorksProps {}
 
-const works: IWork[] = [
-  {
-    id: "shopking-web",
-    name: "Shopking",
-    type: "Web",
-    image: require("/public/images/works/shopking.png"),
-    content: <Shopking />,
-  },
-  {
-    id: "shopking-mobile",
-    name: "Shopking",
-    type: "Mobile",
-    image: require("/public/images/works/shopking.png"),
-    content: <ShopkingMobile />,
-  },
-  {
-    id: "evianbliss",
-    name: "Evian Bliss",
-    type: "Web",
-    image: require("/public/images/works/evianbliss.png"),
-    content: <EvianBliss />,
-  },
-  {
-    id: "rodicash",
-    name: "Rodicash",
-    type: "Mobile",
-    image: require("/public/images/works/rodicash.png"),
-    content: <Rodicash />,
-  },
-  {
-    id: "myports",
-    name: "MyPorts",
-    type: "Mobile",
-    image: require("/public/images/works/rodicash.png"),
-    content: <EvianBliss />,
-  },
-];
-
 const Works: React.FC<WorksProps> = () => {
-  // const [selectedWork, setSelectedWork] = React.useState<IWork>();
   const [activeTab, setActiveTab] = React.useState<TabType>("All");
   const setSelectedWork = useWorkStore((state) => state.setWork);
 
