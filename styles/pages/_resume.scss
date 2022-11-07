@@ -4,7 +4,7 @@
   [class^="col-"] {
     @include respond(mobile-xl) {
       padding-left: 0;
-      padding-right: 2rem;
+      padding-right: 1rem;
     }
   }
 

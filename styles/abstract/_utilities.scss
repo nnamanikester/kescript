@@ -339,6 +339,12 @@ PADDINGS
   &-5 {
     padding-right: 16rem;
   }
+
+  &-sm {
+    &-0 {
+      padding-right: 0 !important;
+    }
+  }
 }
 
 .pb {
