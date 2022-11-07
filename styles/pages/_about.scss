@@ -77,6 +77,10 @@
       &:hover {
         filter: grayscale(0);
       }
+
+      @include respond(mobile-xl) {
+        filter: grayscale(0);
+      }
     }
   }
 }
