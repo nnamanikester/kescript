@@ -66,7 +66,7 @@ const About: React.FC<AboutProps> = () => {
             <span className="value">Nigeria</span>
           </li>
           <li>
-            <span className="property">Freelance</span>
+            <span className="property">Contract</span>
             <span className="separator">.........</span>
             <span className="value">Available</span>
           </li>
@@ -80,7 +80,7 @@ const About: React.FC<AboutProps> = () => {
 
       <div className="page-container">
         <div className="title mt-3">
-          <span>M</span>y Services
+          <span>M</span>y Stack
         </div>
       </div>
 
@@ -88,39 +88,16 @@ const About: React.FC<AboutProps> = () => {
 
       <div className="page-container--full-width">
         <div className="row">
-          <div className="col-6 py-2 px-3 line__right-top line__bottom-left">
+          <div className="col-6 py-2 px-3 line__right-top">
             <div className="feature">
               <div className="feature-icon mb-2">
                 <span className="icon fa fa-user"></span>
               </div>
-              <h3 className="feature-title">Web Development</h3>
+              <h3 className="feature-title">Mobile Development</h3>
               <p>
-                Modern and mobile-ready website that will help you reach all of
-                your marketing.
-              </p>
-            </div>
-          </div>
-          <div className="col-6 py-2 px-3 line__bottom-left">
-            <div className="feature">
-              <div className="feature-icon mb-2">
-                <span className="icon fa fa-user"></span>
-              </div>
-              <h3 className="feature-title">Web Development</h3>
-              <p>
-                Modern and mobile-ready website that will help you reach all of
-                your marketing.
-              </p>
-            </div>
-          </div>
-          <div className="col-6 py-2 px-3 line__bottom-left line__right-top">
-            <div className="feature">
-              <div className="feature-icon mb-2">
-                <span className="icon fa fa-user"></span>
-              </div>
-              <h3 className="feature-title">Web Development</h3>
-              <p>
-                Modern and mobile-ready website that will help you reach all of
-                your marketing.
+                Javascript, Typescript, React, React Native, Redux, GraphQL,
+                Apollo, XCode, Android Studio, Kotlin, Swift, Bitrise, CircleCI,
+                App Store, Playstore, App Center, Expo EAS
               </p>
             </div>
           </div>
@@ -131,8 +108,9 @@ const About: React.FC<AboutProps> = () => {
               </div>
               <h3 className="feature-title">Web Development</h3>
               <p>
-                Modern and mobile-ready website that will help you reach all of
-                your marketing.
+                Javascript, Typescript, HTML, CSS, SCSS, React, NextJS, Redux,
+                Tailwind, Bootstrap, Styled Components, NodeJS, Express,
+                MongoDB, MySQL, GraphQL, Apollo, Git/Github
               </p>
             </div>
           </div>

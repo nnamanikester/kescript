@@ -266,7 +266,7 @@ const Resume: React.FC<ResumeProps> = () => {
 
       <div className="page-container">
         <h1 className="title mt-2">
-          <span>R</span>eferences
+          <span>F</span>eedback
         </h1>
       </div>
 

@@ -2,7 +2,7 @@ import * as React from "react";
 import MetaTags from "../components/MetaTags";
 
 interface MainLayoutProps {
-  children: React.ReactElement;
+  children: React.ReactElement[];
 }
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
