@@ -32,6 +32,11 @@
       position: absolute;
       right: 2rem;
       top: 1rem;
+      background-color: #{$background-color}77;
+      border-radius: 100%;
+      width: 3rem;
+      text-align: center;
+      cursor: pointer;
     }
 
     @keyframes open-article-content {

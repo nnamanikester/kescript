@@ -99,8 +99,8 @@
   &__job-title {
     color: $primary-color;
     @include typed("Software Engineer",
-      "React Native Developer",
-      "Devop Engineer",
+      "React Native Engineer",
+      "Front End Engineer",
       "Blockchain Enthusiast",
       0.7, (caret-width: 0));
   }
