@@ -1,9 +1,16 @@
 import Image from "next/image";
 import * as React from "react";
+import useDownloader from "react-use-downloader";
 
 interface HeroCardProps {}
 
 const HeroCard: React.FC<HeroCardProps> = () => {
+  const { download, error } = useDownloader();
+
+  if (error) {
+    console.log(error);
+  }
+
   return (
     <>
       <div className="hero-card">
@@ -62,6 +69,13 @@ const HeroCard: React.FC<HeroCardProps> = () => {
             <li>
               <a
                 href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  download(
+                    "/files/software-engineer-resume.pdf",
+                    "John's Resume.pdf"
+                  );
+                }}
                 target="__blank"
                 className="btn line__top-right line__right-top"
               >
@@ -69,7 +83,7 @@ const HeroCard: React.FC<HeroCardProps> = () => {
               </a>
             </li>
             <li>
-              <a href="#" className="btn line__top-left">
+              <a href="#contact" className="btn line__top-left">
                 Contact Me
               </a>
             </li>
