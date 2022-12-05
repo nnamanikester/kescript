@@ -41,9 +41,10 @@ const About: React.FC<AboutProps> = () => {
 
       <div className="page-container">
         <p className="pt-3">
-          I am John Nnamani, a Software Engineer who is keen on problem-solving.
-          I have most of my strength in converting UI designs pixel-to-pixel to
-          actual software and enhancing user experience.
+          I am John Nnamani, Experienced Software Engineer with a passion for
+          mobile and web app development. Recognized for strong problem-solving
+          skills and an ability to quickly learn new technologies. Eager to join
+          a team of talented engineers and help build world-class solutions.
         </p>
         <br />
         <p>
