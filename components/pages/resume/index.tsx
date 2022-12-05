@@ -4,6 +4,9 @@ import BubbleScale from "../../BubbleScale";
 import CircleProgress from "../../CircleProgress";
 import LinearProgress from "../../LinearProgress";
 import Quote from "../../Quote";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css/pagination";
+import { Pagination } from "swiper";
 
 interface ResumeProps {}
 
@@ -287,12 +290,22 @@ const Resume: React.FC<ResumeProps> = () => {
       <div className="divider line__bottom-left" />
 
       <div className="page-container pt-2">
-        <Quote
-          name="John Nnamani"
-          title="Software Engineer"
-          text="Lorem ipsum dolor sit amet consectetur adipisicing elit. Laboriosam corporis accusamus laudantium repellat sunt vel voluptatibus dignissimos dolore libero quis labore,"
-          photo={require("/public/images/profile.png")}
-        />
+        <Swiper
+          spaceBetween={50}
+          slidesPerView={1}
+          modules={[Pagination]}
+          pagination={{ clickable: true }}
+          autoplay
+        >
+          <SwiperSlide>
+            <Quote
+              name="Victor Nwagu"
+              title="Backend Engineer"
+              text="Way to stay on your edge and challenge yourself. I appreciate all your positive contributions in project success. I want to say I admire the efforts you put in delivering solutions and I’m proud of the way you took the initiative to grow in your role. Thanks for being a great colleague."
+              photo={require("/public/images/references/victor-nwagu.jpg")}
+            />
+          </SwiperSlide>
+        </Swiper>
       </div>
     </div>
   );
