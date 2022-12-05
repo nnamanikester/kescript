@@ -112,7 +112,7 @@ const About: React.FC<AboutProps> = () => {
               <p>
                 Javascript, Typescript, HTML, CSS, SCSS, React, NextJS, Redux,
                 Tailwind, Bootstrap, Styled Components, NodeJS, Express,
-                MongoDB, MySQL, GraphQL, Apollo, Git/Github
+                MongoDB, MySQL, GraphQL, Apollo, Git/Github, Vercel, Netlify
               </p>
             </div>
           </div>
@@ -366,7 +366,9 @@ const About: React.FC<AboutProps> = () => {
         <Quote
           name="John Nnamani"
           title="Software Engineer"
-          text="Lorem ipsum dolor sit amet consectetur adipisicing elit. Laboriosam corporis accusamus laudantium repellat sunt vel voluptatibus dignissimos dolore libero quis labore,"
+          text={
+            "Good code is it's own documentation. As you're about to add a comment, ask yourself: \"How can I imporive the code so that this comment isn't needed?\""
+          }
           photo={require("/public/images/profile.png")}
         />
       </div>

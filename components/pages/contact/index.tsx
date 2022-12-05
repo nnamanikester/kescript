@@ -99,9 +99,8 @@ const Contact: React.FC<ContactProps> = () => {
                   className="input"
                   placeholder="Your Message"
                   onChange={({ target }) => setMessage(target.value)}
-                >
-                  {message}
-                </textarea>
+                  value={message}
+                ></textarea>
               </div>
             </div>
           </div>

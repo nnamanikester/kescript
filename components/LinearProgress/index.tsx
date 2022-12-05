@@ -11,7 +11,7 @@ const LinearProgress: React.FC<LinearProgressProps> = ({
 }) => {
   return (
     <>
-      <div className="linear-progress ">
+      <div className="linear-progress" title={`${title} - ${percentage}%`}>
         <span className="title">{title}</span>
         <div className="track">
           <div className="progress" style={{ width: `${percentage}%` }} />

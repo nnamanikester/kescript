@@ -1,4 +1,5 @@
 import * as React from "react";
+import cx from "classnames";
 import BubbleScale from "../../BubbleScale";
 import CircleProgress from "../../CircleProgress";
 import LinearProgress from "../../LinearProgress";
@@ -26,32 +27,36 @@ const Resume: React.FC<ResumeProps> = () => {
             </h3>
 
             <div className="experience line__bottom-left">
-              <span className="experience-year active">2020 - Present</span>
-              <h3 className="experience-title">Art Director</h3>
-              <span className="experience-subtitle">Destreetboard Inc.</span>
+              <span className={cx({ "experience-year": true, active: false })}>
+                Nov. 2021 - Jun. 2022
+              </span>
+              <h3 className="experience-title">Mobile App QA Engineer</h3>
+              <span className="experience-subtitle">
+                Maharishi Foundation International
+              </span>
               <p>
-                Collaborate with creative and development teams on the execution
-                of ideas.
+                Developed E2E test suits for the TM app using Detox and Jest to
+                eliminate the manual method of testing the TM app.
               </p>
             </div>
 
             <div className="experience line__bottom-left">
-              <span className="experience-year">2020 - Present</span>
-              <h3 className="experience-title">Art Director</h3>
+              <span className="experience-year">Feb. 2020 - July 2021</span>
+              <h3 className="experience-title">React Native Engineer</h3>
               <span className="experience-subtitle">Destreetboard Inc.</span>
               <p>
-                Collaborate with creative and development teams on the execution
-                of ideas.
+                Developed and mainained company&apos;s mobile app products built
+                with react native and deployed to Playstore and App Store.
               </p>
             </div>
 
             <div className="experience">
-              <span className="experience-year">2020 - Present</span>
-              <h3 className="experience-title">Art Director</h3>
-              <span className="experience-subtitle">Destreetboard Inc.</span>
+              <span className="experience-year">Sep. 2020 - Feb. 2021</span>
+              <h3 className="experience-title">React Native Developer</h3>
+              <span className="experience-subtitle">SooleRide Limited</span>
               <p>
-                Collaborate with creative and development teams on the execution
-                of ideas.
+                Rebuild the entire UI of the SooleRide app and implemented new
+                features as was designed by the UI/UX designer.
               </p>
             </div>
           </div>
@@ -63,32 +68,41 @@ const Resume: React.FC<ResumeProps> = () => {
             </h3>
 
             <div className="experience line__bottom-left">
-              <span className="experience-year">2018 - 2022</span>
-              <h3 className="experience-title">Enugu State University</h3>
-              <span className="experience-subtitle">Enugu, Nigeria.</span>
+              <span className="experience-year active">2018 - 2022</span>
+              <h3 className="experience-title">
+                Enugu State University of Science and Technology
+              </h3>
+              <span className="experience-subtitle">
+                B.Sc in Computer Science.
+              </span>
               <p>
-                Bachelor&apos;s Degree in Computer Science Enugu State
-                University of Science and Technology, Enugu.
+                Bachelor&apos;s Degree in Computer Science - Enugu State
+                University of Science and Technology, Enugu, Nigeria.
               </p>
             </div>
 
             <div className="experience line__bottom-left">
-              <span className="experience-year">2020</span>
-              <h3 className="experience-title">Programming Course</h3>
+              <span className="experience-year">2019</span>
+              <h3 className="experience-title">
+                React Native - The Practical Guide
+              </h3>
               <span className="experience-subtitle">Udemy</span>
               <p>
-                Collaborate with creative and development teams on the execution
-                of ideas.
+                Develop cross-platform (iOS and Android) mobile apps with
+                ReactJS knowledge.
               </p>
             </div>
 
             <div className="experience">
               <span className="experience-year">2018</span>
-              <h3 className="experience-title">React Native Course</h3>
-              <span className="experience-subtitle">Udemy</span>
+              <h3 className="experience-title">Eloquent Javascript</h3>
+              <span className="experience-subtitle">
+                Programming with Javascript
+              </span>
               <p>
-                Collaborate with creative and development teams on the execution
-                of ideas.
+                Introduces you to the JavaScript language. It also covers
+                general programming concepts such as object-oriented
+                programming.
               </p>
             </div>
           </div>
@@ -122,7 +136,7 @@ const Resume: React.FC<ResumeProps> = () => {
                 <CircleProgress title="Android" percentage={50} />
               </div>
               <div className="col-4">
-                <CircleProgress title="XCode" percentage={40} />
+                <CircleProgress title="XCode" percentage={60} />
               </div>
               <div className="col-4">
                 <CircleProgress title="JIRA" percentage={90} />
@@ -157,11 +171,11 @@ const Resume: React.FC<ResumeProps> = () => {
             </div>
 
             <div className="col-12 line__bottom-left mb-1">
-              <BubbleScale title="French" score={5} />
+              <BubbleScale title="French" score={3} />
             </div>
 
             <div className="col-12 mb-1">
-              <BubbleScale title="Spanish" score={3} />
+              <BubbleScale title="Spanish" score={2} />
             </div>
           </div>
         </div>
@@ -176,23 +190,23 @@ const Resume: React.FC<ResumeProps> = () => {
             </h3>
 
             <div className="col-12 line__bottom-left mb-1">
-              <LinearProgress title="JavaScript" percentage={95} />
+              <LinearProgress title="JavaScript" percentage={90} />
             </div>
 
             <div className="col-12 line__bottom-left mb-1">
-              <LinearProgress title="Typescript" percentage={90} />
+              <LinearProgress title="Typescript" percentage={80} />
             </div>
 
             <div className="col-12 line__bottom-left mb-1">
-              <LinearProgress title="React" percentage={98} />
+              <LinearProgress title="React" percentage={90} />
             </div>
 
             <div className="col-12 line__bottom-left mb-1">
-              <LinearProgress title="React Native" percentage={90} />
+              <LinearProgress title="React Native" percentage={85} />
             </div>
 
             <div className="col-12 mb-1">
-              <LinearProgress title="Next JS" percentage={90} />
+              <LinearProgress title="Next JS" percentage={80} />
             </div>
           </div>
 
@@ -266,7 +280,7 @@ const Resume: React.FC<ResumeProps> = () => {
 
       <div className="page-container">
         <h1 className="title mt-2">
-          <span>F</span>eedback
+          <span>R</span>eferences
         </h1>
       </div>
 
