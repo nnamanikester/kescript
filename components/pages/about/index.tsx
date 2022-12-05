@@ -96,9 +96,10 @@ const About: React.FC<AboutProps> = () => {
               </div>
               <h3 className="feature-title">Mobile Development</h3>
               <p>
-                Javascript, Typescript, React, React Native, Redux, GraphQL,
-                Apollo, XCode, Android Studio, Kotlin, Swift, Bitrise, CircleCI,
-                App Store, Playstore, App Center, Expo EAS
+                Javascript, Typescript, React, React Native, Redux, Zustand,
+                Nativebase, React native paper, GraphQL, Firebase, Apollo,
+                XCode, Android Studio, Kotlin, Swift, Bitrise, CircleCI, App
+                Store, Playstore, App Center, Expo EAS
               </p>
             </div>
           </div>
