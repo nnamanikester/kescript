@@ -61,7 +61,7 @@ const Header: React.FC<HeaderProps> = () => {
         </li>
         <li>
           <a
-            href="#blog"
+            href="https://kescript.medium.com"
             className={cx({
               "line__top-right": true,
               active: page == "#blog",
