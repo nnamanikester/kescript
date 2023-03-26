@@ -4,7 +4,7 @@ export interface IWork {
   id: number | string;
   name: string;
   type: TabType;
-  image: NodeRequire;
+  image: NodeRequire | string;
   content: React.ReactNode;
 }
 
