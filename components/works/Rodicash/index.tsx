@@ -5,8 +5,8 @@ interface RodicashProps {}
 const Rodicash: React.FC<RodicashProps> = () => {
   return (
     <>
-      <div>THis is about Rodicash</div>
-      <div>THis is about Rodicash</div>
+      {/* <div>THis is about Rodicash</div>
+      <div>THis is about Rodicash</div> */}
     </>
   );
 };
