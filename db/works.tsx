@@ -6,17 +6,31 @@ import ShopkingMobile from "../components/works/ShopkingMobile";
 
 const works: IWork[] = [
   {
+    id: "pickriders-mobile",
+    name: "Pickriders",
+    type: "Mobile",
+    image: "https://i.imgur.com/ro4x0mW.png",
+    content: <Shopking />,
+  },
+  {
+    id: "pickriders-web",
+    name: "Pickriders",
+    type: "Web",
+    image: "https://i.imgur.com/enbhE9f.png",
+    content: <Shopking />,
+  },
+  {
     id: "shopking-web",
     name: "Shopking",
     type: "Web",
-    image: require("/public/images/works/shopking.png"),
+    image: "https://i.imgur.com/0g9RWVq.jpg",
     content: <Shopking />,
   },
   {
     id: "shopking-mobile",
     name: "Shopking",
     type: "Mobile",
-    image: require("/public/images/works/shopking.png"),
+    image: "https://i.imgur.com/f3MTrsQ.png",
     content: <ShopkingMobile />,
   },
   {
@@ -30,15 +44,8 @@ const works: IWork[] = [
     id: "rodicash",
     name: "Rodicash",
     type: "Mobile",
-    image: require("/public/images/works/rodicash.png"),
+    image: "https://i.imgur.com/KuLL5lb.png",
     content: <Rodicash />,
-  },
-  {
-    id: "myports",
-    name: "MyPorts",
-    type: "Mobile",
-    image: require("/public/images/works/rodicash.png"),
-    content: <EvianBliss />,
   },
 ];
 
