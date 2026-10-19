@@ -12,28 +12,32 @@ export const metadata: Metadata = {
   alternates: { canonical: "/about" },
 };
 
-const SHORT_BIO = `${SITE.author} (@${SITE.handle}) is a software engineer based in ${SITE.location}. John has shipped React Native and full-stack products since 2018, now works on AI developer tooling, and writes at ${SITE.url.replace(/^https?:\/\//, "")}.`;
+const SHORT_BIO = `${SITE.author} (@${SITE.handle}) is a software engineer based in ${SITE.location}. John has shipped React Native and full-stack products since 2018 — five-plus apps across the App Store and Play Store — now works on AI developer tooling, and writes at ${SITE.url.replace(/^https?:\/\//, "")}.`;
 
 const TOPICS = [
   {
     title: "Mobile in production",
-    body: "Performance on low-end Android, release pipelines, end-to-end tests that actually run, native modules when JavaScript isn't enough.",
+    body: "Performance on low-end Android, offline-tolerant data, motion that stays smooth, native modules when JavaScript isn't enough.",
+  },
+  {
+    title: "Testing & shipping",
+    body: "End-to-end tests that run on every build, signing and release pipelines, and getting a binary to users without drama.",
   },
   {
     title: "LLM systems",
     body: "Retrieval, evaluation, and the unglamorous plumbing that makes a model useful inside a real product.",
   },
   {
-    title: "TypeScript & the web",
-    body: "Types as documentation, Next.js and React on the server, and APIs that are pleasant to call.",
+    title: "TypeScript, APIs & the web",
+    body: "Types as documentation, GraphQL versus REST from someone who migrated between them, and Next.js on the server.",
   },
 ];
 
 const PRINCIPLES = [
   ["Measure first.", "Profilers and logs before opinions. Most slow code isn't where you think it is."],
-  ["Boring tools, interesting problems.", "Novelty budget goes to the product, not the stack."],
+  ["Test what users do.", "An end-to-end test of the real flow is worth more than a dozen of the easy unit kind."],
   ["Own the release.", "Code isn't done when it's merged; it's done when it's in users' hands and observable."],
-  ["Write it down.", "If I had to figure it out, someone else will too. That's most of this blog."],
+  ["Write it down.", "When I restructured a frontend, the document explaining why mattered more than the diff. Same reason this blog exists."],
 ];
 
 export default function AboutPage() {
@@ -46,20 +50,22 @@ export default function AboutPage() {
       <div className="grid gap-10 sm:grid-cols-[1fr_11rem]">
         <div className="space-y-5 text-[1.0625rem] leading-[1.75] text-muted">
           <p>
-            I&apos;ve been writing software for a living since 2018. Most of that time went into React Native: a
-            logistics platform with separate apps for riders and customers, peer-to-peer calls over WebRTC, payment
-            flows, and a meditation app whose session timer had to survive backgrounding, persistence and push notifications.
+            I&apos;ve been writing software for a living since 2018, and most of it has been React Native — five-plus
+            apps through the App Store and Play Store. Checkout flows. Encrypted peer-to-peer calls over WebRTC. A
+            meditation app where an interrupted session had to pick up exactly where it stopped. A logistics platform I
+            helped build from nothing, rider app to ledger, where every fee and discount had to reconcile.
           </p>
           <p>
             Mobile is a good teacher. The phone is slow, the network is lying, and you can&apos;t hotfix a binary
-            that&apos;s already on someone&apos;s device. You learn to measure before you optimise, to automate the
-            release, and to test the thing users actually do.
+            that&apos;s already on someone&apos;s device. So I learned to profile before optimising, to put end-to-end
+            tests in the pipeline instead of on a checklist, and to own the release — at one point the CI/CD for five
+            codebases at once.
           </p>
           <p>
             Since 2024 I&apos;ve been at Turing, working across the stack and increasingly on AI tooling: a Slack
-            assistant that answers questions about a large codebase, browser automation, and the Python services
-            behind them. It turns out the lessons transfer — latency is UX, and a system that says &ldquo;I don&apos;t
-            know&rdquo; beats one that guesses.
+            assistant that answers questions about a large codebase, a browser extension that kept a business running
+            through an API outage, and the Python services behind them. The mobile lessons transfer surprisingly well.
+            Latency is still UX, and caching is still most of performance.
           </p>
           <p>
             I write things down so they finally make sense to me, and in case they help whoever is a step or two behind.
@@ -93,7 +99,7 @@ export default function AboutPage() {
             some of the time it cost me. It&apos;s mostly about these things:
           </p>
         </div>
-        <div className="grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-3">
+        <div className="grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2">
           {TOPICS.map((t) => (
             <div key={t.title} className="bg-bg p-5">
               <h3 className="font-medium text-fg">{t.title}</h3>

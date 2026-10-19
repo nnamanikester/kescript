@@ -45,9 +45,10 @@ export default async function Home() {
 
         <div className="mt-6 max-w-[60ch] space-y-4 text-[1.0625rem] leading-relaxed text-muted animate-fade-up" style={{ animationDelay: "120ms" }}>
           <p>
-            Since 2018 I&apos;ve shipped React Native apps for logistics, ride-hailing, payments and meditation — mostly
-            learning that the interesting problems live at the edges: slow phones, flaky networks, release pipelines.
-            Lately I work on systems with a language model somewhere in the loop.
+            Since 2018 I&apos;ve shipped React Native apps for logistics, payments, real-time calling and meditation —
+            mostly learning that the interesting problems live at the edges: slow phones, flaky networks, release
+            pipelines, and ledgers that have to add up. Lately I work on systems with a language model somewhere in the
+            loop.
           </p>
           <p>
             Everything here is written for an earlier version of me — five years ago or last month — and for anyone
