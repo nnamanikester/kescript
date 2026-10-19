@@ -26,7 +26,7 @@ export default function ProjectsPage() {
 
       <div className="space-y-6">
         {PROJECTS.map((p) => (
-          <article key={p.slug} id={p.slug} className="scroll-mt-24 rounded-2xl border border-line bg-elev">
+          <article key={p.slug} id={p.slug} data-spotlight className="scroll-mt-24 rounded-2xl border border-line bg-elev/70">
             <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-line px-5 py-4 sm:px-6">
               <h2 className="text-lg font-semibold tracking-tight text-fg">{p.name}</h2>
               <p className="font-mono text-xs text-faint">

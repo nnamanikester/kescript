@@ -28,7 +28,10 @@ export function ThemeToggle() {
   return (
     <button
       type="button"
-      onClick={() => applyTheme(next)}
+      onClick={(e) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        applyTheme(next, { x: r.left + r.width / 2, y: r.top + r.height / 2 });
+      }}
       aria-label={`Theme: ${pref}. Switch to ${next}`}
       title={`Theme: ${pref}`}
       className="grid h-8 w-8 place-items-center rounded-lg text-muted transition-colors hover:bg-hover hover:text-fg"

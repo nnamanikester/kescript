@@ -76,6 +76,7 @@
   --color-danger: var(--danger);
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  --font-serif: var(--font-instrument), ui-serif, Georgia, serif;
   --shadow-card: var(--shadow);
 }
 
@@ -128,6 +129,37 @@ body {
 /* Theme switches shouldn't animate every border on the page. */
 .theme-switching * {
   transition: none !important;
+}
+
+/*
+ * Depth without noise: a faint aurora at the top of every page and a grain so
+ * flat colour reads as material. Both sit behind content and never move.
+ */
+.aurora {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 36rem;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(40rem 18rem at 18% -4rem, color-mix(in oklab, var(--accent) 14%, transparent), transparent 70%),
+    radial-gradient(34rem 16rem at 82% -6rem, color-mix(in oklab, #6366f1 10%, transparent), transparent 70%);
+  opacity: 0.9;
+}
+[data-theme="light"] .aurora {
+  opacity: 0.55;
+}
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+[data-theme="light"] body::after {
+  opacity: 0.025;
 }
 
 /* Faint engineering grid, used behind page headers. */
@@ -766,4 +798,115 @@ kbd,
 .code-group .code-block {
   border: 0;
   border-radius: 0;
+}
+
+/* ─────────────────────────── interaction layer ─────────────────────────── */
+
+/* Cursor spotlight: a soft glow plus a brighter rim where the pointer is. */
+[data-spotlight] {
+  position: relative;
+  isolation: isolate;
+}
+[data-spotlight]::before,
+[data-spotlight]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--spot, 0);
+  transition: opacity 0.3s ease;
+}
+[data-spotlight]::before {
+  z-index: -1;
+  background: radial-gradient(22rem circle at var(--mx, 50%) var(--my, 50%), var(--accent-soft), transparent 60%);
+}
+[data-spotlight]::after {
+  padding: 1px;
+  background: radial-gradient(14rem circle at var(--mx, 50%) var(--my, 50%), var(--accent-ring), transparent 60%);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+@media (hover: none) {
+  [data-spotlight]::before,
+  [data-spotlight]::after {
+    display: none;
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.toast-in {
+  animation: toast-in 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Links in running text: underline grows in from the left. */
+.link-grow {
+  background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
+  transition: background-size 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.15s;
+}
+.link-grow:hover {
+  background-size: 100% 1px;
+}
+
+/* ─────────────────────────── view transitions ─────────────────────────── */
+
+/* Page changes: a short, soft crossfade. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 220ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Cover art morphs from the card into the post header. */
+::view-transition-group(.morph) {
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+::view-transition-image-pair(.morph) {
+  animation-name: via-blur;
+}
+@keyframes via-blur {
+  30% {
+    filter: blur(2px);
+  }
+}
+
+/* Theme switch: a circle grows from the toggle. */
+html.theme-reveal::view-transition-old(root) {
+  animation: none;
+}
+html.theme-reveal::view-transition-new(root) {
+  animation: theme-reveal 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes theme-reveal {
+  from {
+    clip-path: circle(0 at var(--reveal-x, 100%) var(--reveal-y, 0%));
+  }
+  to {
+    clip-path: circle(var(--reveal-r, 150vmax) at var(--reveal-x, 100%) var(--reveal-y, 0%));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+  .animate-fade-up,
+  .toast-in {
+    animation: none;
+  }
 }

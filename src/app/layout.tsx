@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { ViewTransition } from "react";
+import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { CommandPalette } from "@/components/site/CommandPalette";
+import { Enhancers } from "@/components/site/Enhancers";
 import { SiteJsonLd } from "@/components/site/JsonLd";
 import { themeScript } from "@/components/site/theme";
 import { SITE } from "@/lib/site";
@@ -11,6 +13,8 @@ import "./globals.css";
 
 const sans = Geist({ subsets: ["latin"], variable: "--font-geist-sans", display: "swap" });
 const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono", display: "swap" });
+// Used sparingly, in italic, for warmth against Geist.
+const serif = Instrument_Serif({ subsets: ["latin"], weight: "400", style: ["normal", "italic"], variable: "--font-instrument", display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
@@ -55,16 +59,21 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${sans.variable} ${mono.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${sans.variable} ${mono.variable} ${serif.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="min-h-dvh font-sans antialiased">
+      <body className="relative isolate min-h-dvh font-sans antialiased">
+        <div className="aurora" aria-hidden />
         <SiteJsonLd />
         <Header />
-        <main id="main">{children}</main>
+        <main id="main" className="relative isolate">
+          {/* Navigations crossfade; named elements inside (post art) morph. */}
+          <ViewTransition>{children}</ViewTransition>
+        </main>
         <Footer />
         <CommandPalette />
+        <Enhancers />
         <Analytics />
       </body>
     </html>

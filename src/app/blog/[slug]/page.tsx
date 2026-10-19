@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { ViewTransition } from "react";
 import { ArrowLeft, ArrowRight, ArrowUpRight, Pencil } from "lucide-react";
 import "katex/dist/katex.min.css";
 import { getPost, getPostMetas, getRelated, toMeta, type PostMeta } from "@/lib/content";
@@ -11,7 +12,9 @@ import { CATEGORY_LABEL, SITE } from "@/lib/site";
 import { formatDate } from "@/lib/utils";
 import { PostBody } from "@/components/post/PostBody";
 import { TableOfContents } from "@/components/post/TableOfContents";
-import { ReadingProgress } from "@/components/post/ReadingProgress";
+import { ReadingHud } from "@/components/post/ReadingHud";
+import { FootnotePreviews } from "@/components/post/FootnotePreviews";
+import { PostArt } from "@/components/ui/PostArt";
 import { ShareLinks } from "@/components/post/ShareLinks";
 import { Discussion } from "@/components/discussion/Discussion";
 import { ArticleJsonLd } from "@/components/site/JsonLd";
@@ -78,11 +81,16 @@ export default async function PostPage(props: PageProps<"/blog/[slug]">) {
   return (
     <>
       <ArticleJsonLd post={toMeta(post)} image={ogUrl.startsWith("http") ? ogUrl : SITE.url + ogUrl} />
-      <ReadingProgress targetId="article" />
+      <ReadingHud headings={headings} title={post.title} />
+      <FootnotePreviews rootId="article-body" />
 
       <article id="article" className="px-5 sm:px-6">
-        <header className="relative measure pb-10 pt-14 sm:pt-20">
-          <div className="bg-grid pointer-events-none absolute inset-x-[-30vw] -top-14 bottom-0 -z-10 opacity-60" aria-hidden />
+        <header className="relative measure pb-10 pt-12 sm:pt-16">
+          <ViewTransition name={`art-${post.slug}`} share="morph" default="none">
+            <div className="mb-10 overflow-hidden rounded-2xl border border-line bg-elev/70">
+              <PostArt slug={post.slug} className="block aspect-[48/9] w-full opacity-90" cols={48} rows={9} />
+            </div>
+          </ViewTransition>
           <nav aria-label="Breadcrumb" className="font-mono text-xs text-faint">
             <Link href="/blog" className="hover:text-fg">
               <span className="text-accent">~</span>/blog
@@ -128,7 +136,7 @@ export default async function PostPage(props: PageProps<"/blog/[slug]">) {
         </header>
 
         <div className="mx-auto xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,52rem)_minmax(0,1fr)] xl:gap-8">
-          <div className="xl:col-start-2">
+          <div id="article-body" className="xl:col-start-2">
             <PostBody tree={tree} />
           </div>
           {headings.length >= 3 && (
