@@ -1,48 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#fb923c"/>
-      <stop offset="100%" stop-color="#ea6d0a"/>
-    </linearGradient>
-    <linearGradient id="shine" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="rgba(255,255,255,0.18)"/>
-      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
-    </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="rgba(0,0,0,0.35)"/>
-    </filter>
-  </defs>
-
-  <!-- Base rounded square -->
-  <rect width="64" height="64" rx="14" fill="url(#bg)" filter="url(#shadow)"/>
-
-  <!-- Inner shine overlay -->
-  <rect width="64" height="32" rx="14" fill="url(#shine)"/>
-  <rect y="18" width="64" height="14" fill="url(#shine)"/>
-
-  <!-- Subtle inner border -->
-  <rect x="0.5" y="0.5" width="63" height="63" rx="13.5" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
-
-  <!-- K letterform -->
-  <g fill="#0a0a0f" opacity="0.92">
-    <!-- K vertical stroke -->
-    <rect x="13" y="16" width="5" height="32" rx="1.5"/>
-    <!-- K upper diagonal -->
-    <polygon points="18,32 31,16 36.5,16 24,32" style="clip-path:none"/>
-    <!-- K lower diagonal -->
-    <polygon points="18,32 31,48 36.5,48 24,32"/>
-  </g>
-
-  <!-- S letterform -->
-  <text
-    x="41"
-    y="45"
-    text-anchor="middle"
-    font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif"
-    font-weight="800"
-    font-size="30"
-    fill="#0a0a0f"
-    opacity="0.92"
-    letter-spacing="-1"
-  >S</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!--
+    The kescript mark: a lowercase "k" and an underscore cursor — the header
+    logo, as an icon. One outline on a 32px grid: 45° strokes, flat terminals,
+    a shared baseline at y=26, stem and cursor on whole pixels at 16px.
+    Inverts with the theme like the header: dark tile on light tab bars,
+    light tile on dark ones.
+  -->
+  <style>
+    .tile { fill: #17171a; }
+    .ink { fill: #fbfbf9; }
+    .cursor { fill: #fb923c; }
+    @media (prefers-color-scheme: dark) {
+      .tile { fill: #ececee; }
+      .ink { fill: #0b0b0c; }
+      .cursor { fill: #c2410c; }
+    }
+  </style>
+  <rect class="tile" width="32" height="32" rx="7" />
+  <path class="ink" d="M6 6h4v11l6-6h5.66l-7.5 7.5 7.5 7.5H16l-4.67-4.67L10 22.66V26H6z" />
+  <rect class="cursor" x="24" y="24" width="4" height="2" />
 </svg>

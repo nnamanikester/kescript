@@ -34,12 +34,15 @@ export const metadata: Metadata = {
     canonical: "/",
     types: { "application/rss+xml": "/rss.xml", "application/feed+json": "/feed.json" },
   },
+  // SVG first: it follows the browser's light/dark theme. ICO/PNG are fallbacks.
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
       { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "16x16 32x32 48x48" },
+      { url: "/favicon-32.png", type: "image/png", sizes: "32x32" },
+      { url: "/favicon-16.png", type: "image/png", sizes: "16x16" },
     ],
-    apple: "/apple-touch-icon.png",
+    apple: { url: "/apple-touch-icon.png", sizes: "180x180" },
   },
 };
 

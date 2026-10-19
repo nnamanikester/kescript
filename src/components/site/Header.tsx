@@ -5,15 +5,14 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, Search, X } from "lucide-react";
 import { NAV } from "@/lib/site";
+import { Mark } from "@/components/ui/Mark";
 import { ThemeToggle } from "./ThemeToggle";
 import { OPEN_PALETTE } from "./CommandPalette";
 
 export function Logo() {
   return (
     <Link href="/" className="group flex items-center gap-2 font-mono text-[0.9rem] text-fg" aria-label="kescript, home">
-      <span className="grid h-6 w-6 place-items-center rounded-md bg-fg text-[0.7rem] font-bold text-bg transition-colors group-hover:bg-accent">
-        k
-      </span>
+      <Mark className="h-6 w-6 transition-transform duration-300 group-hover:-rotate-6" />
       <span>
         kescript<span className="text-accent">_</span>
       </span>
