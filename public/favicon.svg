@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!--
+    The kescript mark: a lowercase "k" and an underscore cursor — the header
+    logo, as an icon. One outline on a 32px grid: 45° strokes, flat terminals,
+    a shared baseline at y=26, stem and cursor on whole pixels at 16px.
+    Inverts with the theme like the header: dark tile on light tab bars,
+    light tile on dark ones.
+  -->
+  <style>
+    .tile { fill: #17171a; }
+    .ink { fill: #fbfbf9; }
+    .cursor { fill: #fb923c; }
+    @media (prefers-color-scheme: dark) {
+      .tile { fill: #ececee; }
+      .ink { fill: #0b0b0c; }
+      .cursor { fill: #c2410c; }
+    }
+  </style>
+  <rect class="tile" width="32" height="32" rx="7" />
+  <path class="ink" d="M6 6h4v11l6-6h5.66l-7.5 7.5 7.5 7.5H16l-4.67-4.67L10 22.66V26H6z" />
+  <rect class="cursor" x="24" y="24" width="4" height="2" />
+</svg>

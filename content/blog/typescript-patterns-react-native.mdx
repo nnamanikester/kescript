@@ -1,0 +1,228 @@
+---
+title: "TypeScript Patterns I Use in Every React Native Project"
+date: "2024-12-20"
+excerpt: "The TypeScript patterns that have saved me the most time and prevented the most bugs across 6 years of mobile development."
+tags: ["TypeScript", "React Native", "Best Practices"]
+featured: false
+published: true
+---
+
+TypeScript in React Native isn't just about adding types — it's about designing a codebase that catches entire categories of bugs at compile time. Here are the patterns I reach for consistently.
+
+## 1. Discriminated Unions for State
+
+This is the single most valuable TypeScript pattern for UI state:
+
+```ts
+// ❌ Stringly-typed state — unclear which fields are valid when
+type DataState = {
+  status: 'idle' | 'loading' | 'success' | 'error';
+  data?: User[];
+  error?: string;
+};
+
+// ✅ Discriminated union — each state has exactly the right shape
+type DataState =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'success'; data: User[] }
+  | { status: 'error'; error: string };
+
+// Usage — TypeScript knows exactly what's available in each branch
+function UserList({ state }: { state: DataState }) {
+  if (state.status === 'loading') return <LoadingSpinner />;
+  if (state.status === 'error') return <ErrorMessage message={state.error} />;
+  if (state.status === 'idle') return null;
+  
+  // TypeScript knows state.data exists here — no optional chaining needed
+  return <FlatList data={state.data} />;
+}
+```
+
+This pattern eliminates an entire class of "data is undefined when status is success" bugs.
+
+## 2. Typed Navigation with React Navigation
+
+Untyped navigation params are a maintenance nightmare. Always type your nav stack:
+
+```ts
+// navigation/types.ts
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+
+export type RootStackParamList = {
+  Home: undefined;
+  Profile: { userId: string };
+  PostDetail: { postId: string; title: string };
+  Settings: undefined;
+};
+
+export type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'Home'>;
+export type ProfileScreenProps = NativeStackScreenProps<RootStackParamList, 'Profile'>;
+
+// In your screen:
+function ProfileScreen({ route, navigation }: ProfileScreenProps) {
+  const { userId } = route.params; // ← fully typed, userId: string
+
+  const goToPost = (postId: string, title: string) => {
+    navigation.navigate('PostDetail', { postId, title }); // ← type-checked
+  };
+}
+```
+
+If you mistype a param name or pass the wrong type, you get a compile error — not a runtime crash.
+
+## 3. Generic API Response Wrapper
+
+Instead of typing every API response individually, a generic wrapper:
+
+```ts
+type ApiResponse<T> =
+  | { success: true; data: T }
+  | { success: false; error: string; code: number };
+
+async function fetchUser(id: string): Promise<ApiResponse<User>> {
+  try {
+    const res = await api.get(`/users/${id}`);
+    return { success: true, data: res.data };
+  } catch (err) {
+    return { 
+      success: false, 
+      error: err.message, 
+      code: err.response?.status ?? 500 
+    };
+  }
+}
+
+// Usage
+const result = await fetchUser('123');
+if (!result.success) {
+  console.error(result.error); // TypeScript knows this exists
+  return;
+}
+console.log(result.data.name); // TypeScript knows this is User
+```
+
+## 4. `as const` for Config Objects
+
+When you have config arrays or objects that are used as type sources:
+
+```ts
+// ❌ Types inferred as string[] — loses specific values
+const ROLES = ['admin', 'user', 'moderator'];
+type Role = typeof ROLES[number]; // → string
+
+// ✅ as const preserves literal types
+const ROLES = ['admin', 'user', 'moderator'] as const;
+type Role = typeof ROLES[number]; // → 'admin' | 'user' | 'moderator'
+
+// Perfect for route names, event names, etc.
+const SCREENS = {
+  HOME: 'Home',
+  PROFILE: 'Profile',
+  SETTINGS: 'Settings',
+} as const;
+
+type ScreenName = typeof SCREENS[keyof typeof SCREENS];
+// → 'Home' | 'Profile' | 'Settings'
+```
+
+## 5. Utility Types for Component Props
+
+React Native components often share prop shapes. Utility types keep it DRY:
+
+```ts
+import type { ViewStyle, TextStyle } from 'react-native';
+
+// Base props all custom components share
+type BaseProps = {
+  testID?: string;
+  style?: ViewStyle;
+};
+
+// Pick specific props from another component
+type ButtonVariant = 'primary' | 'ghost' | 'outline';
+
+type ButtonProps = BaseProps & {
+  onPress: () => void;
+  label: string;
+  variant?: ButtonVariant;
+  disabled?: boolean;
+};
+
+// Omit internal props when wrapping
+type PublicButtonProps = Omit<ButtonProps, 'testID'>;
+
+// Make certain required props optional for a simpler variant
+type IconButtonProps = Omit<ButtonProps, 'label'> & {
+  icon: React.ReactNode;
+  'aria-label': string; // required for accessibility
+};
+```
+
+## 6. Type-Safe EventEmitter
+
+Native modules often use event emitters. Type them:
+
+```ts
+type AppEvents = {
+  'user:logout': { reason: 'session_expired' | 'manual' };
+  'notification:received': { id: string; body: string };
+  'payment:completed': { orderId: string; amount: number };
+};
+
+class TypedEventEmitter {
+  private emitter = new NativeEventEmitter(NativeModules.AppModule);
+
+  emit<K extends keyof AppEvents>(event: K, data: AppEvents[K]): void {
+    this.emitter.emit(event, data);
+  }
+
+  on<K extends keyof AppEvents>(
+    event: K,
+    listener: (data: AppEvents[K]) => void
+  ) {
+    return this.emitter.addListener(event, listener);
+  }
+}
+
+const events = new TypedEventEmitter();
+
+// Fully typed — data is inferred correctly
+events.on('payment:completed', ({ orderId, amount }) => {
+  console.log(`Order ${orderId} paid: $${amount}`);
+});
+```
+
+## 7. `satisfies` for Config Objects
+
+New in TypeScript 4.9 — validates an object matches a type without widening it:
+
+```ts
+const theme = {
+  colors: {
+    primary: '#ff9800',
+    secondary: '#1a1a23',
+    text: {
+      primary: 'rgba(255,255,255,0.9)',
+      secondary: 'rgba(255,255,255,0.55)',
+    },
+  },
+  spacing: {
+    xs: 4,
+    sm: 8,
+    md: 16,
+    lg: 24,
+  },
+} satisfies Theme;
+
+// theme.colors.primary is still typed as '#ff9800' (literal)
+// not string — satisfies doesn't widen the type
+```
+
+## The Meta-Pattern
+
+All of these patterns share a common philosophy: **make impossible states unrepresentable**.
+
+If your types can represent `{ status: 'success', data: undefined }`, that's a bug waiting to happen. If your navigation types allow `navigate('NonExistent')`, you'll get a runtime crash. TypeScript is most valuable not when it types the obvious, but when it makes impossible combinations of state literally impossible to write.
+
+That discipline — designing types that model reality accurately — is what separates TypeScript that helps from TypeScript that just adds ceremony.

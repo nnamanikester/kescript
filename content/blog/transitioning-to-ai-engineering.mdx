@@ -1,0 +1,164 @@
+---
+title: "From React Native to AI Engineering: My Transition Roadmap"
+date: "2025-02-10"
+excerpt: "Why I'm moving from mobile engineering to AI, what I'm learning, and the concrete path I'm taking — including the tools, concepts, and projects that are building the bridge."
+tags: ["AI Engineering", "Career", "Learning"]
+featured: true
+published: true
+---
+
+Six years ago I wrote my first React Native component. Today I'm building AI-powered tools at Turing and studying LLMs in every spare hour I have. This post is about why, and how.
+
+## Why the Shift?
+
+A few months into my role at Turing, I was tasked with building an AI-powered Slack assistant for our engineering team. The idea was simple: let engineers ask questions about the codebase in natural language and get useful answers immediately.
+
+I shipped it using a basic RAG (Retrieval-Augmented Generation) pattern — embed the codebase, vector search for relevant chunks, pass to an LLM with context. The result was genuinely useful. Engineers started relying on it daily. That moment crystallized something for me: **the leverage that AI gives a single engineer is extraordinary**.
+
+As a mobile engineer, I build features that serve users. As an AI engineer, I can build *tools that multiply the productivity of entire teams*. The leverage is different in order of magnitude.
+
+## What AI Engineering Actually Means (To Me)
+
+I've seen "AI engineer" mean everything from "prompted GPT-4 in a product" to "trained a transformer from scratch." My definition, which I think is most useful for software engineers:
+
+> An AI engineer builds systems that use LLMs and ML models as components — designing the data flow, prompts, retrieval strategies, evaluation, and infrastructure around them.
+
+It's not research. It's not pure ML. It's software engineering applied to AI capabilities.
+
+## The Learning Stack
+
+Here's what I'm actually studying, in order of priority:
+
+### 1. Prompt Engineering (Foundation)
+Before touching code, understand how LLMs respond to instructions. The key concepts:
+
+- **System prompts** — Set the context and persona
+- **Few-shot examples** — Show the model what good output looks like
+- **Chain-of-thought** — Ask the model to reason step by step
+- **Output formatting** — Structured outputs (JSON mode, tool calls)
+
+```python
+# Chain-of-thought in practice
+system = """You are a code reviewer. When reviewing code:
+1. First identify what the code does
+2. Identify potential bugs
+3. Identify performance issues
+4. Suggest improvements
+
+Always reason through each step before giving your final review."""
+```
+
+### 2. RAG (Retrieval-Augmented Generation)
+This is where I spent most of my early time. RAG lets you give an LLM access to your own data:
+
+```python
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain_community.vectorstores import Chroma
+from langchain.chains import RetrievalQA
+
+# 1. Embed your documents
+embeddings = OpenAIEmbeddings()
+vectorstore = Chroma.from_documents(documents, embeddings)
+
+# 2. Create retriever
+retriever = vectorstore.as_retriever(
+    search_type="similarity",
+    search_kwargs={"k": 5}
+)
+
+# 3. Build QA chain
+qa_chain = RetrievalQA.from_chain_type(
+    llm=ChatOpenAI(model="gpt-4o"),
+    chain_type="stuff",
+    retriever=retriever
+)
+```
+
+The tricky parts aren't the code — they're the decisions:
+- What's your chunking strategy? (size, overlap, by sentence vs paragraph?)
+- What embedding model? (OpenAI ada vs open source vs domain-specific?)
+- How do you handle context window limits?
+- How do you evaluate retrieval quality?
+
+### 3. Agents and Tool Use
+This is the most powerful pattern. Instead of one LLM call, you give the model tools it can call:
+
+```python
+tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "search_codebase",
+            "description": "Search the codebase for relevant code snippets",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "The search query"}
+                },
+                "required": ["query"]
+            }
+        }
+    }
+]
+
+# The model decides when and how to call tools
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=messages,
+    tools=tools,
+    tool_choice="auto"
+)
+```
+
+Agents loop: LLM decides action → execute action → feed result back → LLM decides next action → repeat until done.
+
+### 4. Evaluation
+The hardest problem in AI engineering. How do you know if your system is getting better or worse?
+
+I'm using a combination of:
+- **LLM-as-judge**: Use a strong model to evaluate outputs from a weaker model
+- **Human evaluation**: Still the gold standard for important decisions
+- **Metrics**: BLEU/ROUGE for summarization, custom evals for task-specific behavior
+
+## The Cross-Domain Advantage
+
+Here's what I've realized: **being a strong software engineer first is a massive advantage in AI engineering**.
+
+Mobile engineers are obsessed with performance. We profile everything. We care about latency, memory, battery. That mindset maps directly to AI systems:
+
+- **Latency** — Streaming responses, parallel calls, caching embeddings
+- **Memory** — Chunking strategies, context management
+- **Reliability** — Fallbacks, retry logic, error handling
+
+When I built the Slack assistant at Turing, my mobile engineering instincts immediately kicked in:
+- Cache frequently-accessed embeddings (like caching API responses in React Query)
+- Stream responses to avoid perceived latency (like skeleton loading states)
+- Graceful degradation when the LLM returns garbage
+
+The skills transfer more than you'd think.
+
+## What I'm Building Next
+
+To cement AI Engineering skills, I'm working on:
+
+1. **Personal codebase assistant** — RAG over my own projects, queryable via CLI
+2. **Blog post generator** — Given a topic and outline, generates a draft I can edit
+3. **Code review bot** — GitHub Action that reviews PRs using GPT-4o
+
+All three are tools I'd actually use. The best way to learn AI engineering is to build things you'll use every day.
+
+## Resources That Actually Helped
+
+- **fast.ai** — Practical deep learning from scratch, no fluff
+- **Anthropic's documentation** — Best prompt engineering guides available
+- **LangChain cookbook** — Real patterns, not toy examples
+- **Building LLMs for Production** (book) — End-to-end systems thinking
+- **Latent Space podcast** — Keeps me current on what's happening
+
+## The Long Game
+
+I'm not trying to replace my software engineering background — I'm extending it. The engineers who will be most valuable in the next decade are those who can both *build robust systems* and *integrate intelligent capabilities* into them.
+
+React Native taught me how to think about cross-platform constraints, performance budgets, and user experience. AI engineering is adding a new dimension: systems that can reason, plan, and adapt.
+
+The transition isn't a career pivot. It's an upgrade.

@@ -1,0 +1,769 @@
+@import "tailwindcss";
+
+/* Theme is driven by [data-theme] on <html>, set before first paint. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ─────────────────────────────── tokens ─────────────────────────────── */
+
+:root {
+  --bg: #fbfbf9;
+  --bg-elev: #ffffff;
+  --bg-subtle: #f3f3f0;
+  --bg-hover: #eeeeea;
+  --fg: #17171a;
+  --fg-muted: #4f4f57;
+  --fg-subtle: #85858e;
+  --border: #e6e6e1;
+  --border-strong: #d2d2cc;
+  --accent: #c2410c;
+  --accent-strong: #9a3412;
+  --accent-soft: rgb(234 88 12 / 0.08);
+  --accent-ring: rgb(234 88 12 / 0.35);
+  --code-bg: #f6f6f3;
+  --code-line-hl: rgb(234 88 12 / 0.07);
+  --ok: #15803d;
+  --danger: #b91c1c;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px -12px rgb(0 0 0 / 0.12);
+  --callout-note: #2563eb;
+  --callout-tip: #15803d;
+  --callout-important: #7c3aed;
+  --callout-warning: #b45309;
+  --callout-caution: #b91c1c;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #0b0b0c;
+  --bg-elev: #121214;
+  --bg-subtle: #17171a;
+  --bg-hover: #1d1d21;
+  --fg: #ececee;
+  --fg-muted: #a6a6ae;
+  --fg-subtle: #6f6f78;
+  --border: #222226;
+  --border-strong: #303036;
+  --accent: #fb923c;
+  --accent-strong: #fdba74;
+  --accent-soft: rgb(251 146 60 / 0.09);
+  --accent-ring: rgb(251 146 60 / 0.4);
+  --code-bg: #0f0f10;
+  --code-line-hl: rgb(251 146 60 / 0.08);
+  --ok: #4ade80;
+  --danger: #f87171;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 32px -12px rgb(0 0 0 / 0.6);
+  --callout-note: #60a5fa;
+  --callout-tip: #4ade80;
+  --callout-important: #a78bfa;
+  --callout-warning: #fbbf24;
+  --callout-caution: #f87171;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-elev: var(--bg-elev);
+  --color-subtle: var(--bg-subtle);
+  --color-hover: var(--bg-hover);
+  --color-fg: var(--fg);
+  --color-muted: var(--fg-muted);
+  --color-faint: var(--fg-subtle);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-ok: var(--ok);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  --shadow-card: var(--shadow);
+}
+
+/* ─────────────────────────────── base ─────────────────────────────── */
+
+html {
+  background: var(--bg);
+  color: var(--fg);
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  scroll-padding-top: 5rem;
+}
+
+body {
+  background: var(--bg);
+  font-feature-settings: "ss01", "cv11";
+}
+
+/*
+ * Decorative backdrops bleed past the reading column. Clip on <main>, not <body>:
+ * body overflow propagates to the viewport, which doesn't stop mobile zoom-out.
+ * clip (not hidden) keeps position: sticky working.
+ */
+#main {
+  overflow-x: clip;
+}
+
+::selection {
+  background: var(--accent-ring);
+  color: var(--fg);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Theme switches shouldn't animate every border on the page. */
+.theme-switching * {
+  transition: none !important;
+}
+
+/* Faint engineering grid, used behind page headers. */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, var(--border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black 20%, transparent 75%);
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+}
+
+.link {
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition: text-decoration-color 0.15s, color 0.15s;
+}
+.link:hover {
+  text-decoration-color: var(--accent);
+  color: var(--accent);
+}
+
+kbd,
+.kbd {
+  font-family: var(--font-mono);
+  font-size: 0.72em;
+  line-height: 1;
+  padding: 0.2em 0.42em;
+  border-radius: 5px;
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  background: var(--bg-elev);
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.animate-fade-up {
+  animation: fade-up 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.pulse-dot {
+  animation: pulse-dot 2.4s ease-in-out infinite;
+}
+
+/* ───────────────────────────── article ───────────────────────────── */
+
+/*
+ * Breakout grid (swyxkit's full / feature / popout). Every child sits in the
+ * reading column; code, figures and tables pop out a little; `.full` spans.
+ */
+.prose {
+  --measure: 68ch;
+  --popout: 2.25rem;
+  display: grid;
+  grid-template-columns:
+    [full-start] minmax(0, 1fr)
+    [popout-start] minmax(0, var(--popout))
+    [content-start] min(var(--measure), 100%)
+    [content-end] minmax(0, var(--popout))
+    [popout-end] minmax(0, 1fr)
+    [full-end];
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--fg-muted);
+}
+.prose > * {
+  grid-column: content;
+  min-width: 0;
+}
+.prose > figure,
+.prose > .code-group,
+.prose > .table-wrap,
+.prose > .mermaid,
+.prose > .embed,
+.prose > .popout {
+  grid-column: popout;
+}
+.prose > .full {
+  grid-column: full;
+}
+@media (max-width: 640px) {
+  .prose {
+    --popout: 0rem;
+    font-size: 1rem;
+  }
+}
+
+.prose > * + * {
+  margin-top: 1.25em;
+}
+
+.prose :where(strong, b) {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.prose :where(h2, h3, h4) {
+  color: var(--fg);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  scroll-margin-top: 5.5rem;
+}
+.prose h2 {
+  font-size: 1.5rem;
+  margin-top: 2.6em;
+}
+.prose h3 {
+  font-size: 1.2rem;
+  margin-top: 2em;
+}
+.prose h4 {
+  font-size: 1.02rem;
+  margin-top: 1.8em;
+}
+.prose :where(h2, h3, h4) + * {
+  margin-top: 0.75em;
+}
+.prose .heading-anchor {
+  margin-left: 0.4em;
+  font-family: var(--font-mono);
+  font-weight: 400;
+  color: var(--fg-subtle);
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+.prose :where(h2, h3, h4):hover .heading-anchor,
+.prose .heading-anchor:focus-visible {
+  opacity: 1;
+}
+.prose .heading-anchor:hover {
+  color: var(--accent);
+}
+
+.prose a:not(.heading-anchor, .not-prose a) {
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition: text-decoration-color 0.15s, color 0.15s;
+}
+.prose a:not(.heading-anchor, .not-prose a):hover {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
+}
+
+.prose :where(ul, ol) {
+  padding-left: 1.4em;
+}
+.prose ul {
+  list-style: none;
+}
+.prose ul > li {
+  position: relative;
+}
+.prose ul > li::before {
+  content: "";
+  position: absolute;
+  left: -1em;
+  top: 0.78em;
+  width: 0.38em;
+  height: 1px;
+  background: var(--fg-subtle);
+}
+.prose ol {
+  list-style: decimal;
+}
+.prose ol > li::marker {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  color: var(--fg-subtle);
+}
+.prose li + li,
+.prose li > :where(ul, ol) {
+  margin-top: 0.4em;
+}
+.prose li > p + p {
+  margin-top: 0.6em;
+}
+
+/* Task lists */
+.prose .contains-task-list {
+  padding-left: 0.2em;
+}
+.prose .task-list-item::before {
+  display: none;
+}
+.prose .task-list-item input[type="checkbox"] {
+  appearance: none;
+  width: 1em;
+  height: 1em;
+  margin: 0 0.55em 0 0;
+  vertical-align: -0.12em;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 4px;
+  display: inline-grid;
+  place-content: center;
+}
+.prose .task-list-item input[type="checkbox"]:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.prose .task-list-item input[type="checkbox"]:checked::after {
+  content: "";
+  width: 0.5em;
+  height: 0.28em;
+  border: 2px solid var(--bg);
+  border-top: 0;
+  border-right: 0;
+  transform: rotate(-45deg) translate(1px, -1px);
+}
+
+.prose blockquote {
+  border-left: 2px solid var(--border-strong);
+  padding-left: 1.1em;
+  color: var(--fg-muted);
+}
+.prose blockquote > * + * {
+  margin-top: 0.8em;
+}
+
+.prose hr {
+  border: 0;
+  height: 1px;
+  margin: 3em 0;
+  background-image: linear-gradient(to right, var(--border-strong) 50%, transparent 50%);
+  background-size: 8px 1px;
+}
+
+/* Inline code */
+.prose :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  padding: 0.12em 0.38em;
+  border-radius: 5px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  overflow-wrap: break-word;
+}
+.prose :not(pre) > code[data-language] span {
+  color: var(--shiki-light);
+}
+[data-theme="dark"] .prose :not(pre) > code[data-language] span {
+  color: var(--shiki-dark);
+}
+
+/* Tables */
+.prose .table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92em;
+  line-height: 1.55;
+  font-variant-numeric: tabular-nums;
+}
+.prose th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--fg);
+  background: var(--bg-subtle);
+  font-size: 0.85em;
+}
+.prose :where(th, td) {
+  padding: 0.6em 0.9em;
+  border-bottom: 1px solid var(--border);
+}
+.prose tr:last-child td {
+  border-bottom: 0;
+}
+.prose tbody tr:hover {
+  background: var(--bg-subtle);
+}
+
+/* Images */
+.prose figure[data-image] {
+  margin-top: 2em;
+  margin-bottom: 0.5em;
+}
+.prose figure[data-image] img,
+.prose > p img {
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  max-width: 100%;
+  height: auto;
+  margin-inline: auto;
+}
+.prose figcaption {
+  margin-top: 0.75em;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--fg-subtle);
+}
+
+/* Footnotes */
+.prose [data-footnotes] {
+  margin-top: 3.5em;
+  padding-top: 1.5em;
+  border-top: 1px solid var(--border);
+  font-size: 0.88em;
+}
+.prose [data-footnotes] h2 {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+  margin-top: 0;
+}
+.prose [data-footnote-ref] {
+  font-family: var(--font-mono);
+  font-size: 0.78em;
+  text-decoration: none !important;
+  color: var(--accent) !important;
+  padding: 0 0.1em;
+}
+.prose [data-footnote-backref] {
+  text-decoration: none !important;
+  font-family: var(--font-mono);
+}
+
+/* Details */
+.prose details {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.7em 1em;
+  background: var(--bg-elev);
+}
+.prose details > summary {
+  cursor: pointer;
+  color: var(--fg);
+  font-weight: 550;
+}
+.prose details[open] > summary {
+  margin-bottom: 0.6em;
+}
+
+/* Maths */
+.prose .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5em 0;
+}
+.prose .katex {
+  font-size: 1.05em;
+  color: var(--fg);
+}
+
+/* Callouts (GitHub alerts) */
+.callout {
+  --c: var(--callout-note);
+  border: 1px solid color-mix(in oklab, var(--c) 28%, var(--border));
+  background: color-mix(in oklab, var(--c) 6%, transparent);
+  border-radius: 10px;
+  padding: 0.9em 1.1em;
+  font-size: 0.95em;
+}
+.callout[data-callout="tip"] {
+  --c: var(--callout-tip);
+}
+.callout[data-callout="important"] {
+  --c: var(--callout-important);
+}
+.callout[data-callout="warning"] {
+  --c: var(--callout-warning);
+}
+.callout[data-callout="caution"] {
+  --c: var(--callout-caution);
+}
+.callout-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c);
+  margin-bottom: 0.4em;
+}
+.callout > :not(.callout-title) + * {
+  margin-top: 0.7em;
+}
+
+/* ───────────────────────────── code blocks ───────────────────────────── */
+
+.code-block {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--code-bg);
+  overflow: hidden;
+}
+.code-block pre {
+  overflow-x: auto;
+  padding: 0.95rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.75;
+  tab-size: 2;
+}
+.code-block pre code {
+  display: grid;
+  min-width: max-content;
+  font-family: inherit;
+}
+.code-block [data-line] {
+  padding: 0 1.15rem;
+  border-left: 2px solid transparent;
+}
+.code-block [data-line] span {
+  color: var(--shiki-light);
+}
+[data-theme="dark"] .code-block [data-line] span {
+  color: var(--shiki-dark);
+}
+
+/* line numbers: ```ts showLineNumbers */
+.code-block code[data-line-numbers] {
+  counter-reset: line;
+}
+.code-block code[data-line-numbers] > [data-line]::before {
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  width: 1.6rem;
+  margin-right: 1.1rem;
+  text-align: right;
+  color: var(--fg-subtle);
+  opacity: 0.6;
+}
+
+/* highlighted lines: ```ts {2-4} or // [!code highlight] */
+.code-block [data-highlighted-line],
+.code-block [data-line].highlighted {
+  background: var(--code-line-hl);
+  border-left-color: var(--accent);
+}
+.code-block [data-highlighted-chars],
+.code-block .highlighted-word {
+  background: var(--accent-soft);
+  box-shadow: 0 0 0 1px var(--accent-ring);
+  border-radius: 3px;
+  padding: 0 0.1em;
+}
+
+/* diffs: // [!code ++] and // [!code --] */
+.code-block [data-line].diff.add {
+  background: color-mix(in oklab, var(--ok) 11%, transparent);
+  border-left-color: var(--ok);
+}
+.code-block [data-line].diff.remove {
+  background: color-mix(in oklab, var(--danger) 11%, transparent);
+  border-left-color: var(--danger);
+  opacity: 0.75;
+}
+.code-block [data-line].diff.add::after,
+.code-block [data-line].diff.remove::after {
+  position: absolute;
+  left: 0.35rem;
+  color: var(--fg-subtle);
+}
+.code-block [data-line].diff.add::after {
+  content: "+";
+  color: var(--ok);
+}
+.code-block [data-line].diff.remove::after {
+  content: "−";
+  color: var(--danger);
+}
+.code-block [data-line].diff {
+  position: relative;
+}
+
+/* errors/warnings: // [!code error] */
+.code-block [data-line].highlighted.error {
+  background: color-mix(in oklab, var(--danger) 11%, transparent);
+  border-left-color: var(--danger);
+}
+.code-block [data-line].highlighted.warning {
+  background: color-mix(in oklab, var(--callout-warning) 12%, transparent);
+  border-left-color: var(--callout-warning);
+}
+
+/* focus: // [!code focus] */
+.code-block pre.has-focused [data-line]:not(.focused) {
+  filter: blur(1.5px);
+  opacity: 0.45;
+  transition: filter 0.25s, opacity 0.25s;
+}
+.code-block:hover pre.has-focused [data-line]:not(.focused) {
+  filter: none;
+  opacity: 1;
+}
+
+.code-block[data-collapsed="true"] pre {
+  max-height: 22rem;
+  overflow-y: hidden;
+}
+.code-block[data-collapsed="true"]::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 5rem;
+  background: linear-gradient(transparent, var(--code-bg));
+  pointer-events: none;
+}
+
+/* Comment bodies reuse the same code styling. */
+.comment-body figure[data-rehype-pretty-code-figure] {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--code-bg);
+  overflow: hidden;
+}
+.comment-body figure[data-rehype-pretty-code-figure] pre {
+  overflow-x: auto;
+  padding: 0.75rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.7;
+}
+.comment-body figure[data-rehype-pretty-code-figure] [data-line] span {
+  color: var(--shiki-light);
+}
+[data-theme="dark"] .comment-body figure[data-rehype-pretty-code-figure] [data-line] span {
+  color: var(--shiki-dark);
+}
+
+/* ───────────────────────────── comments ───────────────────────────── */
+
+.comment-body {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--fg-muted);
+  overflow-wrap: anywhere;
+}
+.comment-body > * + * {
+  margin-top: 0.75em;
+}
+.comment-body a {
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+}
+.comment-body a:hover {
+  color: var(--accent);
+}
+.comment-body :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+}
+.comment-body blockquote {
+  border-left: 2px solid var(--border-strong);
+  padding-left: 0.9em;
+}
+.comment-body :where(ul, ol) {
+  padding-left: 1.3em;
+  list-style: revert;
+}
+.comment-body img {
+  max-width: 100%;
+  border-radius: 8px;
+}
+.comment-body :where(h1, h2, h3, h4) {
+  color: var(--fg);
+  font-weight: 600;
+}
+.comment-body table {
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+.comment-body :where(th, td) {
+  border: 1px solid var(--border);
+  padding: 0.35em 0.6em;
+}
+
+/* react-tweet picks up [data-theme] from <html>. */
+.embed .react-tweet-theme {
+  --tweet-container-margin: 0 auto;
+}
+
+/* Same width as the article's reading column, at the article's font size. */
+.measure {
+  font-size: 1.0625rem;
+  max-width: 68ch;
+  margin-inline: auto;
+}
+@media (max-width: 640px) {
+  .measure {
+    font-size: 1rem;
+  }
+}
+
+/* Inside a group the group draws the frame. */
+.code-group .code-block {
+  border: 0;
+  border-radius: 0;
+}

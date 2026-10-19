@@ -1,0 +1,182 @@
+---
+title: "React Native Performance: What I've Learned Shipping 5 Production Apps"
+date: "2025-01-15"
+excerpt: "The real bottlenecks in React Native performance and how to fix them — from JS thread congestion to render optimization and memory leaks."
+tags: ["React Native", "Performance", "Mobile"]
+featured: true
+published: true
+---
+
+After six years of building React Native apps — from logistics platforms to meditation apps — I've seen performance fail in the same ways, over and over. This is the distilled knowledge from shipping 5 production apps.
+
+## The JS Thread Is Your Bottleneck
+
+React Native runs your JavaScript on a single thread. Every animation, every state update, every re-render competes for that thread. The moment you block it, your UI stutters.
+
+The golden rule: **keep the JS thread free during animations**.
+
+```ts title="❌ Blocking animation"
+// This runs on JS thread — causes jank
+const onPress = () => {
+  const animation = new Animated.Value(0);
+  Animated.timing(animation, {
+    toValue: 1,
+    duration: 300,
+    useNativeDriver: false, // ← JS thread!
+  }).start();
+};
+```
+
+```ts title="✅ Native-driven animation"
+const onPress = () => {
+  const animation = new Animated.Value(0);
+  Animated.timing(animation, {
+    toValue: 1,
+    duration: 300,
+    useNativeDriver: true, // ← Native thread ✓
+  }).start();
+};
+```
+
+`useNativeDriver: true` moves the animation to the native thread entirely. No JS thread involvement. No jank.
+
+## Reanimated 3: The Right Tool for Complex Animations
+
+For anything beyond simple Animated API, reach for Reanimated. Worklets run on the UI thread synchronously:
+
+```ts
+import { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+
+function PressableCard() {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Pressable
+      onPressIn={() => { scale.value = withSpring(0.96); }}
+      onPressOut={() => { scale.value = withSpring(1); }}
+    >
+      <Animated.View style={[styles.card, animatedStyle]}>
+        {/* content */}
+      </Animated.View>
+    </Pressable>
+  );
+}
+```
+
+The `useAnimatedStyle` worklet runs entirely on the UI thread — zero JS overhead.
+
+## FlatList: The Single Biggest Win
+
+Replacing ScrollView with FlatList on a list of 50+ items is usually an instant 2-3x improvement. But FlatList has footguns:
+
+```tsx
+// ❌ Creating new function references on every render
+<FlatList
+  data={items}
+  renderItem={({ item }) => <ItemRow item={item} />}  // new fn ref each render
+  keyExtractor={(item) => item.id}                    // new fn ref each render
+/>
+```
+
+```tsx
+// ✅ Stable references
+const renderItem = useCallback(
+  ({ item }: { item: Item }) => <ItemRow item={item} />,
+  []
+);
+
+const keyExtractor = useCallback((item: Item) => item.id, []);
+
+<FlatList
+  data={items}
+  renderItem={renderItem}
+  keyExtractor={keyExtractor}
+  getItemLayout={(_, index) => ({    // ← if fixed height, huge perf win
+    length: ITEM_HEIGHT,
+    offset: ITEM_HEIGHT * index,
+    index,
+  })}
+  removeClippedSubviews={true}       // ← unmounts off-screen items
+  maxToRenderPerBatch={10}
+  windowSize={5}
+/>
+```
+
+`getItemLayout` is the secret weapon. It skips layout measurement for every item, which is expensive. If your list items have a fixed height, always implement this.
+
+## Memory Leaks in Subscription Patterns
+
+This one bit me hard at Maharishi — meditation timer sessions that would leak memory over time:
+
+```ts
+// ❌ Memory leak — event listener never cleaned up
+useEffect(() => {
+  const subscription = DeviceEventEmitter.addListener('timerTick', handleTick);
+  // forgot cleanup!
+}, []);
+
+// ✅ Always clean up
+useEffect(() => {
+  const subscription = DeviceEventEmitter.addListener('timerTick', handleTick);
+  return () => subscription.remove();
+}, [handleTick]);
+```
+
+Same applies to AppState, NetInfo, and any other subscription. The rule: **if you subscribe, you must unsubscribe**.
+
+## Hermes Engine
+
+Enable it. Now. The performance gains are significant:
+
+```json title="android/app/build.gradle"
+project.ext.react = [
+    enableHermes: true,
+]
+```
+
+```xml title="ios/Podfile"
+use_react_native!(
+  :path => config[:reactNativePath],
+  :hermes_enabled => true
+)
+```
+
+Hermes pre-compiles JS to bytecode at build time, dramatically reducing TTI (time to interactive).
+
+## The Profiler Workflow
+
+Don't guess at performance problems. Profile them:
+
+1. **Flipper** — For general JS thread and memory profiling
+2. **React Native Performance Monitor** — Quick FPS and RAM overlay (shake device → Perf Monitor)
+3. **Android Profiler / Xcode Instruments** — For native-level issues
+4. **why-did-you-render** — For identifying unnecessary re-renders in dev
+
+```bash
+# Add why-did-you-render in dev
+npm install @welldone-software/why-did-you-render --save-dev
+```
+
+```ts title="src/wdyr.ts"
+import React from 'react';
+
+if (process.env.NODE_ENV === 'development') {
+  const whyDidYouRender = require('@welldone-software/why-did-you-render');
+  whyDidYouRender(React, {
+    trackAllPureComponents: true,
+  });
+}
+```
+
+## Key Takeaways
+
+- Use `useNativeDriver: true` for all Animated API animations
+- Use Reanimated for complex gesture-driven animations
+- Always use FlatList for scrollable lists — implement `getItemLayout` if items are fixed height
+- Clean up all subscriptions in `useEffect` return functions
+- Enable Hermes — it's a free 10-30% TTI improvement
+- Profile before optimizing — gut feelings about perf bottlenecks are usually wrong
