@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { getTags } from "@/lib/content";
 import { PageHeader } from "@/components/ui/PageHeader";
 
 export const revalidate = 300;
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Topics",
-  description: "Every topic I've written about, by number of posts.",
-  alternates: { canonical: "/tags" },
-};
+  path: "/tags",
+  socialTitle: "Topics",
+  description:
+    "Every topic John Nnamani has written about — React Native, TypeScript, AI engineering, performance and more — ordered by how many posts cover it.",
+});
 
 export default async function TagsPage() {
   const tags = await getTags();

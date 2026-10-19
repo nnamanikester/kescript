@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, ArrowUpRight, Pencil } from "lucide-react";
 import "katex/dist/katex.min.css";
 import { getPost, getPostMetas, getRelated, toMeta, type PostMeta } from "@/lib/content";
 import { processPost } from "@/lib/markdown/pipeline";
+import { FEEDS } from "@/lib/seo";
 import { getPublicThread } from "@/lib/github";
 import { CATEGORY_LABEL, SITE } from "@/lib/site";
 import { formatDate } from "@/lib/utils";
@@ -45,9 +46,12 @@ export async function generateMetadata(props: PageProps<"/blog/[slug]">): Promis
     title: post.title,
     description: post.description,
     keywords: post.tags,
-    alternates: { canonical: post.canonical ?? `/blog/${post.slug}` },
+    alternates: { canonical: post.canonical ?? `/blog/${post.slug}`, types: FEEDS },
     openGraph: {
       type: "article",
+      siteName: SITE.name,
+      locale: "en_US",
+      section: CATEGORY_LABEL[post.category],
       title: post.title,
       description: post.description,
       url: `/blog/${post.slug}`,
@@ -57,7 +61,7 @@ export async function generateMetadata(props: PageProps<"/blog/[slug]">): Promis
       tags: post.tags,
       images: [{ url: image, width: 1200, height: 630, alt: post.title }],
     },
-    twitter: { card: "summary_large_image", title: post.title, description: post.description, images: [image] },
+    twitter: { card: "summary_large_image", creator: SITE.twitterHandle, title: post.title, description: post.description, images: [image] },
   };
 }
 

@@ -1,16 +1,19 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Image from "next/image";
 import Link from "next/link";
 import { EXPERIENCE } from "@/lib/data";
 import { SITE } from "@/lib/site";
 import { PageHeader, SectionTitle } from "@/components/ui/PageHeader";
 import { BioCopy } from "@/components/site/BioCopy";
+import { ProfileJsonLd } from "@/components/site/JsonLd";
 
-export const metadata: Metadata = {
-  title: "About",
-  description: `${SITE.author} is a software engineer who writes about mobile, the web platform, and LLM systems.`,
-  alternates: { canonical: "/about" },
-};
+export const metadata: Metadata = pageMetadata({
+  title: `About ${SITE.author}`,
+  path: "/about",
+  socialTitle: `About ${SITE.author}`,
+  description: `Software engineer in ${SITE.location}. Shipping React Native and full-stack apps since 2018, now building AI developer tooling. Story, principles and timeline.`,
+});
 
 const SHORT_BIO = `${SITE.author} (@${SITE.handle}) is a software engineer based in ${SITE.location}. John has shipped React Native and full-stack products since 2018 — five-plus apps across the App Store and Play Store — now works on AI developer tooling, and writes at ${SITE.url.replace(/^https?:\/\//, "")}.`;
 
@@ -43,6 +46,7 @@ const PRINCIPLES = [
 export default function AboutPage() {
   return (
     <div className="mx-auto max-w-3xl px-5 sm:px-6">
+      <ProfileJsonLd />
       <PageHeader path="about" title="About">
         <p>Hi, I&apos;m John — {SITE.handle} on most of the internet.</p>
       </PageHeader>

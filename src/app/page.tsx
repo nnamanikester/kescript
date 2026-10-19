@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import Image from "next/image";
 import { ViewTransition } from "react";
@@ -13,6 +15,15 @@ import { Subscribe } from "@/components/site/Subscribe";
 import { PaletteHint } from "@/components/site/PaletteHint";
 
 export const revalidate = 300;
+
+export const metadata: Metadata = pageMetadata({
+  title: `${SITE.author} — React Native, TypeScript & AI engineering notes`,
+  absoluteTitle: true,
+  path: "/",
+  socialTitle: "Notes to a younger me, on building software",
+  kicker: "~/kescript",
+  description: SITE.description,
+});
 
 export default async function Home() {
   const [featured, posts, tags] = await Promise.all([getFeatured(2), getPostMetas(), getTags()]);

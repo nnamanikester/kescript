@@ -11,10 +11,10 @@ import { OPEN_PALETTE } from "./CommandPalette";
 
 export function Logo() {
   return (
-    <Link href="/" className="group flex items-center gap-2 font-mono text-[0.9rem] text-fg" aria-label="kescript, home">
+    <Link href="/" className="group flex items-center gap-2 font-mono text-[0.9rem] text-fg" aria-label="KeScript, home">
       <Mark className="h-6 w-6 transition-transform duration-300 group-hover:-rotate-6" />
       <span className="hidden sm:inline">
-        kescript<span className="text-accent">_</span>
+        KeScript<span className="text-accent">_</span>
       </span>
     </Link>
   );

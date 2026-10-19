@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import fs from "node:fs/promises";
 import path from "node:path";
 import "katex/dist/katex.min.css";
@@ -6,11 +7,12 @@ import { processPost } from "@/lib/markdown/pipeline";
 import { PostBody } from "@/components/post/PostBody";
 import { PageHeader } from "@/components/ui/PageHeader";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Markdown style guide",
+  path: "/styleguide",
   description: "Every markdown feature this site renders, in one place.",
-  robots: { index: false },
-};
+  noindex: true,
+});
 
 export default async function StyleGuide() {
   const source = await fs.readFile(path.join(process.cwd(), "content", "styleguide.md"), "utf8");

@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { GH_REPO_URL, SITE } from "@/lib/site";
 import { PageHeader, SectionTitle } from "@/components/ui/PageHeader";
 import { Subscribe } from "@/components/site/Subscribe";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Subscribe",
-  description: "Follow new posts by RSS, JSON Feed, email, or GitHub.",
-  alternates: { canonical: "/subscribe" },
-};
+  path: "/subscribe",
+  socialTitle: "Get new posts",
+  description:
+    "Follow John Nnamani's writing on React Native, TypeScript and AI engineering by email, RSS, JSON Feed or GitHub. No tracking, no schedule — just new posts.",
+});
 
 const FEEDS = [
   ["RSS", `${SITE.url}/rss.xml`, "Full post content. Works with any reader."],

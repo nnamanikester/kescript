@@ -119,10 +119,10 @@ export const PROJECTS: Project[] = [
   },
   {
     slug: "kescript",
-    name: "kescript.com",
+    name: "KeScript",
     year: "2026",
     kind: "Open source",
-    summary: "This site. GitHub issues as the CMS and the comment store, rendered with Next.js.",
+    summary: "This site, kescript.com. GitHub issues as the CMS and the comment store, rendered with Next.js.",
     problem: "I wanted to write in markdown without a database, a CMS bill, or a third-party comment widget.",
     approach: [
       "Posts are labelled GitHub issues; frontmatter optional.",

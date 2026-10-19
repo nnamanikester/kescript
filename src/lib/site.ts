@@ -3,10 +3,11 @@
  * Everything that identifies the author or the content repo lives here.
  */
 export const SITE = {
-  name: "kescript",
+  /** The name. Handles, usernames and the domain stay lowercase "kescript". */
+  name: "KeScript",
   author: "John Nnamani",
   handle: "kescript",
-  title: "kescript — John Nnamani",
+  title: "KeScript — John Nnamani",
   tagline: "Notes to a younger me, on building software.",
   description:
     "Explanations I wish I'd had earlier — React Native in production, the web platform, and systems with an LLM somewhere in the loop. By John Nnamani.",
