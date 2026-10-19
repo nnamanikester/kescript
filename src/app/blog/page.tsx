@@ -21,7 +21,7 @@ export default async function BlogPage() {
 
   const featured =
     discussed.length > 0 ? (
-      <section aria-labelledby="most-discussed" className="mt-12 rounded-2xl border border-line bg-elev p-5 sm:p-6">
+      <section aria-labelledby="most-discussed" data-spotlight className="mt-12 rounded-2xl border border-line bg-elev/70 p-5 sm:p-6">
         <h2 id="most-discussed" className="label mb-4">
           Most discussed
         </h2>

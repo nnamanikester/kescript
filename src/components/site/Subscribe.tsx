@@ -9,7 +9,7 @@ import { GH_REPO_URL, SITE } from "@/lib/site";
  */
 export function Subscribe({ compact = false }: { compact?: boolean }) {
   return (
-    <section aria-labelledby="subscribe-title" className="rounded-2xl border border-line bg-elev p-6 sm:p-7">
+    <section aria-labelledby="subscribe-title" data-spotlight className="rounded-2xl border border-line bg-elev/70 p-6 sm:p-7">
       <h2 id="subscribe-title" className="font-semibold tracking-tight text-fg">
         Get new posts
       </h2>
