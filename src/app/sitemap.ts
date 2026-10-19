@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getPostMetas, getTags } from "@/lib/content";
 import { SITE } from "@/lib/site";
+import { MIN_POSTS_TO_INDEX_TAG } from "@/lib/seo";
 
 export const revalidate = 3600;
 
@@ -21,6 +22,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "yearly" as const,
       priority: 0.8,
     })),
-    ...tags.map(({ tag }) => ({ url: `${SITE.url}/tags/${tag}`, changeFrequency: "monthly" as const, priority: 0.3 })),
+    // Thin tag pages are noindex, so they don't belong in the sitemap either.
+    ...tags
+      .filter(({ count }) => count >= MIN_POSTS_TO_INDEX_TAG)
+      .map(({ tag }) => ({ url: `${SITE.url}/tags/${tag}`, changeFrequency: "monthly" as const, priority: 0.4 })),
   ];
 }

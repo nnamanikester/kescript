@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { GH, GH_REPO_URL } from "@/lib/site";
 import { PageHeader, SectionTitle } from "@/components/ui/PageHeader";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Colophon",
-  description: "How this site is built: GitHub issues as a CMS, native comments, and a markdown pipeline.",
-  alternates: { canonical: "/colophon" },
-};
+  path: "/colophon",
+  socialTitle: "How this site works",
+  description:
+    "How kescript.com is built: GitHub issues as a free CMS and comment store, a unified + Shiki markdown pipeline, and Next.js 16 — with no database at all.",
+});
 
 const FLOW = [
   ["write", "Open an issue in the repo. The body is the post, in markdown, with optional frontmatter."],

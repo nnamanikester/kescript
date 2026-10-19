@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { ArrowUpRight } from "lucide-react";
 import { PROJECTS } from "@/lib/data";
 import { PageHeader } from "@/components/ui/PageHeader";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Projects",
-  description: "Selected work: the problem, the approach, and what happened.",
-  alternates: { canonical: "/projects" },
-};
+  path: "/projects",
+  socialTitle: "Projects — the problem, the approach, what happened",
+  description:
+    "Engineering case studies by John Nnamani: an LLM codebase assistant, a logistics platform built from zero, encrypted WebRTC calls, and more.",
+});
 
 export default function ProjectsPage() {
   return (

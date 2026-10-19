@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { Suspense } from "react";
 import { MessageSquare } from "lucide-react";
@@ -6,14 +7,17 @@ import { getMostDiscussed, getSearchDocs } from "@/lib/content";
 import { BlogIndex } from "@/components/blog/BlogIndex";
 import { PostArchive } from "@/components/blog/PostRow";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { BlogJsonLd } from "@/components/site/JsonLd";
 
 export const revalidate = 300;
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Writing",
-  description: "Essays, tutorials, notes and snippets on building software — mobile, the web platform, and LLM systems.",
-  alternates: { canonical: "/blog" },
-};
+  path: "/blog",
+  socialTitle: "Writing — notes to a younger me",
+  description:
+    "Essays, tutorials and notes by John Nnamani on React Native in production, TypeScript, release engineering and building with LLMs. Fully searchable.",
+});
 
 export default async function BlogPage() {
   const [docs, discussed] = await Promise.all([getSearchDocs(), getMostDiscussed(3)]);
@@ -49,6 +53,7 @@ export default async function BlogPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-5 sm:px-6">
+      <BlogJsonLd posts={docs} />
       <PageHeader path="blog" title="Writing">
         <p>
           {docs.length} posts, roughly {Math.round(words / 1000)}k words. Long-form essays, step-by-step tutorials, and

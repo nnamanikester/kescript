@@ -9,6 +9,7 @@ import { Enhancers } from "@/components/site/Enhancers";
 import { SiteJsonLd } from "@/components/site/JsonLd";
 import { themeScript } from "@/components/site/theme";
 import { SITE } from "@/lib/site";
+import { FEEDS } from "@/lib/seo";
 import "./globals.css";
 
 const sans = Geist({ subsets: ["latin"], variable: "--font-geist-sans", display: "swap" });
@@ -34,10 +35,12 @@ export const metadata: Metadata = {
   },
   twitter: { card: "summary_large_image", creator: SITE.twitterHandle, images: ["/api/og"] },
   robots: { index: true, follow: true, googleBot: { "max-image-preview": "large", "max-snippet": -1 } },
-  alternates: {
-    canonical: "/",
-    types: { "application/rss+xml": "/rss.xml", "application/feed+json": "/feed.json" },
-  },
+  // No canonical here: pages set their own via pageMetadata(). A root canonical
+  // would be inherited by any page that forgot, pointing it at the homepage.
+  alternates: { types: FEEDS },
+  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? { verification: { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION } }
+    : {}),
   // SVG first: it follows the browser's light/dark theme. ICO/PNG are fallbacks.
   icons: {
     icon: [

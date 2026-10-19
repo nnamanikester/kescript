@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { NOW, NOW_UPDATED } from "@/lib/data";
 import { SITE } from "@/lib/site";
 import { formatDate } from "@/lib/utils";
 import { PageHeader, SectionTitle } from "@/components/ui/PageHeader";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Now",
-  description: `What ${SITE.author} is focused on right now.`,
-  alternates: { canonical: "/now" },
-};
+  path: "/now",
+  socialTitle: `What ${SITE.author} is doing now`,
+  description: `What ${SITE.author} is building, learning and writing about right now — AI developer tooling, RAG pipelines and agentic patterns. A /now page, updated by hand.`,
+});
 
 export default function NowPage() {
   const sections = [

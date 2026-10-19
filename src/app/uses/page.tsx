@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { USES } from "@/lib/data";
 import { PageHeader, SectionTitle } from "@/components/ui/PageHeader";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Uses",
-  description: "The languages, tools and services I reach for.",
-  alternates: { canonical: "/uses" },
-};
+  path: "/uses",
+  socialTitle: "The tools I use, and why",
+  description:
+    "The languages, frameworks and tools John Nnamani uses to build and ship software — React Native, TypeScript, Python, Detox, Fastlane, Next.js — and why.",
+});
 
 export default function UsesPage() {
   return (
