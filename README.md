@@ -1,34 +1,129 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# kescript.com
 
-## Getting Started
+Notes to a younger me, on building software.
 
-First, run the development server:
+A Next.js 16 port of [swyxkit](https://github.com/swyxio/swyxkit): **GitHub issues are the CMS, the comment store, and the reactions** — no database, no CMS bill, no third-party comment widget.
 
-```bash
-npm run dev
-# or
-yarn dev
+```sh
+cp .env.example .env.local   # fill in GITHUB_TOKEN at minimum
+npm install
+npm run dev                  # http://localhost:3000
+npm test                     # vitest
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+## Publishing a post
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+1. Open a new issue in [nnamanikester/kescript](https://github.com/nnamanikester/kescript/issues/new).
+2. **Title** → post title. **Body** → the post, in markdown.
+3. Add the **`published`** label. That's it.
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+The site picks it up within 5 minutes, or within seconds once the webhook is set up (below). To unpublish, remove the label. To edit, edit the issue.
 
-## Learn More
+Extra labels become tags (`react-native`, `ai`, …). Add a **`featured`** label to put a post on the home page's *Start here*.
 
-To learn more about Next.js, take a look at the following resources:
+### Optional frontmatter
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Put this at the very top of the issue body to override anything:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+```yaml
+---
+title: How I built an AI Slack assistant
+subtitle: Retrieval, chunking, and not hallucinating
+description: Shown in lists, search results and social cards.
+slug: ai-slack-assistant # default: slugified title — don't change after publishing
+date: 2025-03-05 # default: when the issue was opened
+updated: 2025-04-01
+category: essay # essay | tutorial | note | snippet (default: note)
+tags: [ai, rag, python] # default: the issue's labels
+image: https://…/cover.png # default: generated OG card
+canonical: https://… # if it was published elsewhere first
+featured: true
+---
+```
 
-## Deploy on Vercel
+### What markdown can do
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Everything GitHub renders, plus more. Open **`/styleguide`** on the running site next to [`content/styleguide.md`](content/styleguide.md) to see the source and the result side by side. Highlights:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+| You write | You get |
+| --- | --- |
+| ` ```ts title="app.ts" showLineNumbers {2-4} ` | Filename header, line numbers, highlighted lines, copy & wrap buttons |
+| `// [!code ++]` `// [!code --]` `// [!code focus]` `// [!code error]` | Diff, focus, and error lines (comment is removed) |
+| ` ```py /chunk/ ` | Every `chunk` highlighted |
+| `:::code-group` … `:::` around several fences | Tabs; the reader's choice is remembered site-wide |
+| ` ```sh npm2yarn ` | Automatic npm / pnpm / yarn / bun tabs |
+| `> [!NOTE]` `[!TIP]` `[!IMPORTANT]` `[!WARNING]` `[!CAUTION]` | Callouts |
+| `$E=mc^2$`, `$$…$$` | KaTeX maths |
+| ` ```mermaid ` | Diagrams that follow light/dark theme |
+| A YouTube or X link alone on a line, or `{% youtube ID %}` / `{% tweet ID %}` | Embeds |
+| `![alt](src "Caption")` | Figure with caption, click to zoom |
+| `[^1]` | Footnotes |
+| `<details>`, `<kbd>`, any HTML | Rendered as-is (posts only — comments are sanitised) |
+| `## Table of contents` heading | Auto-filled with links to the sections |
+
+Drag images into the GitHub issue editor to upload them — GitHub hosts them for free.
+
+---
+
+## Turn on native comments (one-time, ~5 minutes)
+
+Readers sign in with GitHub in a popup, then comment, edit, delete and react **as themselves** without leaving the page. Until this is configured, the comment box links to the GitHub issue instead.
+
+1. **Create a GitHub App** at *GitHub → Settings → Developer settings → GitHub Apps → New*.
+   - **Homepage URL:** `https://kescript.com`
+   - **Callback URL:** `https://kescript.com/api/auth/callback`. Add `http://localhost:3000/api/auth/callback` as a second one for local dev.
+   - **Webhook:** uncheck *Active*. This app doesn't need one.
+   - **Repository permissions → Issues:** *Read and write*. Leave everything else at *No access*.
+   - **Where can this app be installed:** *Only on this account*
+2. **Generate a client secret** on the app page.
+3. **Install the app** (left sidebar → *Install App*) on **only** the `kescript` repository.
+4. Set the env vars (locally in `.env.local`, and in Vercel → Settings → Environment Variables):
+   ```sh
+   GITHUB_CLIENT_ID=Iv23…
+   GITHUB_CLIENT_SECRET=…
+   AUTH_SECRET=$(openssl rand -base64 32)
+   ```
+
+Why a GitHub App rather than an OAuth App: readers grant it access to issues **in this one repo only**. An OAuth App would need the `public_repo` scope, which covers every public repo they own, and that's a lot to ask for a comment box.
+
+Tokens are kept in an AES-GCM-encrypted, httpOnly cookie, so there's no session database. Writes are same-origin only, and comment HTML is sanitised before it's highlighted.
+
+## Instant publishing (optional)
+
+*Repo → Settings → Webhooks → Add webhook*
+- **Payload URL:** `https://kescript.com/api/revalidate`
+- **Content type:** `application/json`
+- **Secret:** any random string, also set as `GITHUB_WEBHOOK_SECRET`
+- **Events:** *Issues*, *Issue comments*, *Labels*
+
+## Newsletter (optional)
+
+Create a free [Buttondown](https://buttondown.com) account and set `NEXT_PUBLIC_BUTTONDOWN_USERNAME`. Until then, readers get RSS, JSON Feed, and "watch on GitHub".
+
+---
+
+## Where things live
+
+```
+content/styleguide.md        every markdown feature, rendered at /styleguide
+content/blog/*.mdx           fallback posts, used only when GitHub is unreachable
+src/lib/site.ts              name, links, repo, labels, categories, nav  ← start here
+src/lib/data.ts              /now, /projects, /about timeline, /uses  ← edit by hand
+src/lib/content.ts           GitHub issues → posts
+src/lib/github.ts            GraphQL thread: comments, reactions, mutations
+src/lib/markdown/            unified pipeline + plugins (tested)
+src/components/discussion/   comment thread, editor, reactions, popup sign-in
+src/components/post/         code blocks, tabs, mermaid, embeds, TOC
+src/app/api/                 auth, thread, preview, posts JSON, OG images, webhook
+```
+
+| Route | |
+| --- | --- |
+| `/` `/blog` `/blog/[slug]` `/tags` `/tags/[tag]` | Writing |
+| `/about` `/now` `/projects` `/uses` `/colophon` `/subscribe` `/styleguide` | Pages |
+| `/rss.xml` `/feed.json` `/sitemap.xml` | Feeds (full content) |
+| `/api/posts` `/api/posts/[slug]` | JSON (swyxkit's `listContent.json`) |
+
+Keyboard: <kbd>⌘K</kbd> command palette everywhere, <kbd>/</kbd> to search on `/blog`, <kbd>⌘↵</kbd> to post a comment.

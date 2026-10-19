@@ -1,0 +1,253 @@
+---
+title: "How I Built an AI Slack Assistant That Engineers Actually Use"
+date: "2025-03-05"
+excerpt: "The architecture, decisions, and lessons learned from building an AI-powered Slack bot that helps engineers navigate a large codebase — without hallucinating."
+tags: ["AI Engineering", "Slack API", "RAG", "Python"]
+featured: true
+published: true
+---
+
+At Turing, engineers spend a non-trivial amount of time just trying to understand the codebase — where something lives, how a feature works, why a decision was made. I built a Slack app to fix that. Here's how.
+
+## The Problem
+
+Our codebase is large. Senior engineers know it well, but junior engineers and new hires constantly need to ask: "Where does X happen?", "How does Y work?", "What does this service do?"
+
+The answers are in the code. But `grep` and `ctrl+F` have a ceiling. What if you could just ask?
+
+## Architecture Overview
+
+```
+User asks question in Slack
+         ↓
+Slack Bot receives event
+         ↓
+Embed question → vector similarity search codebase index
+         ↓
+Retrieve top-k relevant code chunks
+         ↓
+Build prompt: question + code context
+         ↓
+LLM generates answer
+         ↓
+Stream response back to Slack thread
+```
+
+Simple on paper. The details are where it gets interesting.
+
+## Building the Codebase Index
+
+The first step is turning the codebase into something searchable by meaning, not just keywords.
+
+### Chunking Strategy
+
+I tried several approaches:
+
+**By file** — Too coarse. Large files produce chunks too big for context windows.
+
+**By fixed token count** — Fast and simple, but splits functions/classes mid-way, losing context.
+
+**By AST (syntax tree)** — Best quality, but complex to implement across languages.
+
+I landed on a hybrid: chunk by function/class boundaries using tree-sitter when possible, fall back to 512-token overlapping chunks otherwise.
+
+```python
+import tree_sitter_python as tspython
+from tree_sitter import Language, Parser
+
+PY_LANGUAGE = Language(tspython.language())
+parser = Parser(PY_LANGUAGE)
+
+def chunk_python_file(source: str) -> list[dict]:
+    tree = parser.parse(bytes(source, 'utf-8'))
+    chunks = []
+    
+    for node in tree.root_node.children:
+        if node.type in ('function_definition', 'class_definition'):
+            chunk_text = source[node.start_byte:node.end_byte]
+            chunks.append({
+                'text': chunk_text,
+                'type': node.type,
+                'start_line': node.start_point[0],
+            })
+    
+    return chunks
+```
+
+### Embeddings
+
+I used OpenAI's `text-embedding-3-small`. It's cheap, fast, and good enough. I store embeddings in Chroma (local, no infra overhead).
+
+```python
+from openai import OpenAI
+import chromadb
+
+client = OpenAI()
+chroma = chromadb.PersistentClient(path="./codebase_index")
+collection = chroma.get_or_create_collection("codebase")
+
+def index_chunks(chunks: list[dict]) -> None:
+    texts = [c['text'] for c in chunks]
+    
+    response = client.embeddings.create(
+        input=texts,
+        model="text-embedding-3-small"
+    )
+    
+    embeddings = [e.embedding for e in response.data]
+    ids = [f"chunk_{i}" for i in range(len(chunks))]
+    
+    collection.add(
+        embeddings=embeddings,
+        documents=texts,
+        ids=ids,
+        metadatas=chunks,
+    )
+```
+
+### Keeping the Index Fresh
+
+A stale index is worse than no index — it confidently answers with outdated information. I added a Git hook to re-index changed files on commit:
+
+```bash title=".git/hooks/post-commit"
+#!/bin/bash
+changed_files=$(git diff-tree --no-commit-id -r --name-only HEAD)
+python scripts/reindex.py --files $changed_files
+```
+
+## The Slack Integration
+
+Slack's Events API posts to a webhook URL when users mention your bot. I use FastAPI to handle events:
+
+```python
+from fastapi import FastAPI, Request
+from slack_sdk import WebClient
+import asyncio
+
+app = FastAPI()
+slack = WebClient(token=os.environ["SLACK_BOT_TOKEN"])
+
+@app.post("/slack/events")
+async def handle_event(request: Request):
+    body = await request.json()
+    
+    # URL verification challenge
+    if "challenge" in body:
+        return {"challenge": body["challenge"]}
+    
+    event = body.get("event", {})
+    
+    # Only respond to app mentions
+    if event.get("type") == "app_mention":
+        # Process async to avoid Slack's 3s timeout
+        asyncio.create_task(handle_mention(event))
+    
+    return {"ok": True}
+
+async def handle_mention(event: dict):
+    question = extract_question(event["text"])
+    channel = event["channel"]
+    thread_ts = event.get("thread_ts", event["ts"])
+    
+    # Initial "thinking" message
+    initial = slack.chat_postMessage(
+        channel=channel,
+        thread_ts=thread_ts,
+        text="🔍 Searching the codebase..."
+    )
+    
+    answer = await get_answer(question)
+    
+    # Update with real answer
+    slack.chat_update(
+        channel=channel,
+        ts=initial["ts"],
+        text=answer
+    )
+```
+
+## The Prompt That Actually Works
+
+Getting the prompt right took iteration. The naive version hallucinates confidently:
+
+```python
+# ❌ Too permissive
+system = "You are a helpful assistant. Answer questions about the codebase."
+```
+
+The version that works:
+
+```python
+# ✅ Grounded, honest, specific
+system = """You are an expert at understanding codebases. 
+You answer questions based ONLY on the code snippets provided.
+
+Rules:
+1. If the answer isn't in the provided code, say "I don't see that in the retrieved code. Try rephrasing."
+2. Always reference the specific file/function you're drawing from
+3. Show relevant code snippets when explaining behavior
+4. If you're uncertain, say so
+
+Format: Answer → Evidence (code snippet with file reference) → Caveats"""
+```
+
+The key change: explicit instruction to say "I don't know" when the answer isn't in the context. Without this, LLMs will confidently make things up from their training data.
+
+## Handling Irrelevant Retrieval
+
+Sometimes the vector search returns code that's vaguely related but doesn't actually answer the question. I added a relevance filter:
+
+```python
+async def get_answer(question: str) -> str:
+    # Retrieve candidates
+    results = collection.query(
+        query_texts=[question],
+        n_results=10
+    )
+    
+    # Filter by relevance score
+    MIN_RELEVANCE = 0.7
+    relevant_chunks = [
+        doc for doc, dist in zip(
+            results['documents'][0],
+            results['distances'][0]
+        )
+        if dist < MIN_RELEVANCE
+    ]
+    
+    if not relevant_chunks:
+        return "I couldn't find relevant code for that question. Try rephrasing or being more specific."
+    
+    context = "\n\n---\n\n".join(relevant_chunks[:5])
+    
+    response = openai_client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": f"Question: {question}\n\nCode context:\n{context}"}
+        ]
+    )
+    
+    return response.choices[0].message.content
+```
+
+## What I'd Do Differently
+
+**Re-ranking** — After vector search, run a second pass with a cross-encoder to re-rank results. Much better relevance, small latency cost.
+
+**Conversation memory** — Currently each question is stateless. Adding conversation history would allow follow-up questions.
+
+**User feedback loop** — A 👍/👎 reaction on responses would generate labeled training data for evaluation and improvement.
+
+**Better chunking metadata** — Include the file path and surrounding function names in each chunk. This context dramatically improves LLM answers.
+
+## Results
+
+After 3 months in production:
+- 200+ questions answered per week
+- Engineers explicitly say it reduced their time searching for code
+- New hires onboard faster — they don't have to wait for a senior to explain architecture
+
+The best feedback: "I use it more than Stack Overflow for codebase questions."
+
+That's the signal that made it worth building.
