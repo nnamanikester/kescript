@@ -90,7 +90,7 @@ export function Footer() {
       {/* The wordmark, cropped by the bottom edge. Decorative. */}
       <div aria-hidden className="pointer-events-none mx-auto mt-8 max-w-5xl select-none px-5 sm:px-6">
         <p className="-mb-[0.22em] bg-gradient-to-b from-line-strong to-transparent bg-clip-text font-mono text-[clamp(4rem,17vw,11.5rem)] font-semibold leading-none tracking-[-0.06em] text-transparent">
-          kescript<span className="text-accent/40">_</span>
+          KeScript<span className="text-accent/40">_</span>
         </p>
       </div>
       <p className="sr-only">

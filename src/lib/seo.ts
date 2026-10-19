@@ -17,7 +17,7 @@ export function ogImageUrl(title: string, kicker: string, meta?: string): string
 }
 
 interface PageSeo {
-  /** Shown in the tab and search results (the template appends " — kescript"). */
+  /** Shown in the tab and search results (the template appends " — KeScript"). */
   title: string;
   description: string;
   /** Path for the canonical URL, e.g. "/about". */

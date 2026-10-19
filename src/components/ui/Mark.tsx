@@ -1,4 +1,4 @@
-/** The kescript mark — same geometry as public/favicon.svg. Inverts with the theme via tokens. */
+/** The KeScript mark — same geometry as public/favicon.svg. Inverts with the theme via tokens. */
 export function Mark({ className = "h-6 w-6" }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" className={className} aria-hidden="true">

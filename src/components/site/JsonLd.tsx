@@ -25,7 +25,8 @@ const person = {
   "@type": "Person",
   "@id": PERSON_ID,
   name: SITE.author,
-  alternateName: SITE.handle,
+  // The brand and the handle, so searches for either connect to this person.
+  alternateName: [SITE.name, SITE.handle],
   url: `${SITE.url}/about`,
   image: `${SITE.url}/images/profile.jpg`,
   email: `mailto:${SITE.email}`,

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <!--
-    The kescript mark: a lowercase "k" and an underscore cursor — the header
+    The KeScript mark: a lowercase "k" and an underscore cursor — the header
     logo, as an icon. One outline on a 32px grid: 45° strokes, flat terminals,
     a shared baseline at y=26, stem and cursor on whole pixels at 16px.
     Inverts with the theme like the header: dark tile on light tab bars,

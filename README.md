@@ -1,5 +1,6 @@
-# kescript.com
+# KeScript
 
+[kescript.com](https://kescript.com) — 
 Notes to a younger me, on building software.
 
 A Next.js 16 port of [swyxkit](https://github.com/swyxio/swyxkit): **GitHub issues are the CMS, the comment store, and the reactions** — no database, no CMS bill, no third-party comment widget.
