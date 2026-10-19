@@ -157,7 +157,7 @@ export default function AboutPage() {
             ["email", SITE.email, `mailto:${SITE.email}`],
             ["github", "nnamanikester", SITE.links.github],
             ["x", SITE.twitterHandle, SITE.links.twitter],
-            ["linkedin", "john-nnamani", SITE.links.linkedin],
+            ["linkedin", "nnamanikester", SITE.links.linkedin],
           ].map(([k, v, href]) => (
             <li key={k}>
               <a href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer me" className="group flex gap-3">

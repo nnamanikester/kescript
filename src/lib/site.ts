@@ -16,7 +16,7 @@ export const SITE = {
   links: {
     github: "https://github.com/nnamanikester",
     twitter: "https://x.com/kescript",
-    linkedin: "https://linkedin.com/in/john-nnamani",
+    linkedin: "https://www.linkedin.com/in/nnamanikester",
   },
   twitterHandle: "@kescript",
   /** Buttondown username. Leave empty to show RSS-only subscribe options. */
