@@ -17,7 +17,7 @@ import { PaletteHint } from "@/components/site/PaletteHint";
 export const revalidate = 300;
 
 export const metadata: Metadata = pageMetadata({
-  title: `${SITE.author} — React Native, TypeScript & AI engineering notes`,
+  title: `John @${SITE.handle} Nnamani`,
   absoluteTitle: true,
   path: "/",
   socialTitle: "Notes to a younger me, on building software",
