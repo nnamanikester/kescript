@@ -20,6 +20,7 @@ import { ShareLinks } from "@/components/post/ShareLinks";
 import { Discussion } from "@/components/discussion/Discussion";
 import { ArticleJsonLd } from "@/components/site/JsonLd";
 import { Subscribe } from "@/components/site/Subscribe";
+import { EditPostLink } from "@/components/write/OwnerLinks";
 
 export const revalidate = 300;
 export const dynamicParams = true;
@@ -121,6 +122,11 @@ export default async function PostPage(props: PageProps<"/blog/[slug]">) {
             {post.updated && post.updated !== post.date && <span>updated {formatDate(post.updated)}</span>}
             <span>{post.readingMinutes} min read</span>
             <span className="hidden sm:inline">{post.words.toLocaleString("en-US")} words</span>
+            {post.issueNumber && (
+              <span className="sm:ml-auto">
+                <EditPostLink issueNumber={post.issueNumber} />
+              </span>
+            )}
             {post.commentCount > 0 && (
               <a href="#discussion" className="hover:text-fg">
                 {post.commentCount} comment{post.commentCount === 1 ? "" : "s"}

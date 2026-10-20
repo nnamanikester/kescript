@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Viewer } from "@/lib/reactions";
 
+/** Fired after sign-in/out so every auth-aware component on the page agrees. */
+export const AUTH_CHANGED = "ks-auth-changed";
+
 interface AuthState {
   configured: boolean;
   viewer: Viewer | null;
@@ -44,22 +47,25 @@ export function useGitHubAuth() {
         return;
       }
       const viewer = await refresh();
+      window.dispatchEvent(new Event(AUTH_CHANGED));
       if (viewer && pending.current) {
         const run = pending.current;
         pending.current = null;
         run();
       }
     };
+    const onChanged = () => void refresh();
     window.addEventListener("message", onMessage);
+    window.addEventListener(AUTH_CHANGED, onChanged);
     return () => {
       cancelled = true;
       window.removeEventListener("message", onMessage);
+      window.removeEventListener(AUTH_CHANGED, onChanged);
     };
   }, [refresh]);
 
-  const signIn = useCallback((then?: () => void) => {
+  const signIn = useCallback((then?: () => void, returnTo = `${window.location.pathname}#discussion`) => {
     pending.current = then ?? null;
-    const returnTo = `${window.location.pathname}#discussion`;
     const url = `/api/auth/login?popup=1&returnTo=${encodeURIComponent(returnTo)}`;
     const w = 520;
     const h = 720;
@@ -73,6 +79,7 @@ export function useGitHubAuth() {
   const signOut = useCallback(async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     setState((s) => ({ ...s, viewer: null }));
+    window.dispatchEvent(new Event(AUTH_CHANGED));
   }, []);
 
   /** A write came back 401: the token expired or was revoked. */

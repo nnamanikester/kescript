@@ -8,6 +8,8 @@ import { NAV, SITE } from "@/lib/site";
 import { Mark } from "@/components/ui/Mark";
 import { ThemeToggle } from "./ThemeToggle";
 import { OPEN_PALETTE } from "./CommandPalette";
+import { WriteButton } from "@/components/write/OwnerLinks";
+import { AccountMenu } from "./AccountMenu";
 
 export function Logo() {
   return (
@@ -131,9 +133,11 @@ export function Header() {
             >
               <Search className="h-4 w-4" />
             </button>
+            <WriteButton />
             <div className="[&_button]:!rounded-full">
               <ThemeToggle />
             </div>
+            <AccountMenu />
             <button
               type="button"
               onClick={() => setOpen((o) => !o)}

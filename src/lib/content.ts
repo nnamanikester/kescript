@@ -16,6 +16,9 @@ import path from "node:path";
 import matter from "gray-matter";
 import { CATEGORIES, GH, type Category } from "@/lib/site";
 import { readingTime, slugify } from "@/lib/utils";
+import { toPlainText } from "@/lib/content-text";
+
+export { toPlainText };
 
 export const POSTS_TAG = "posts";
 const REVALIDATE_SECONDS = 300;
@@ -65,22 +68,6 @@ const SYSTEM_LABELS = new Set([...GH.publishedLabels, "featured"].map((l) => l.t
 
 function labelName(l: GitHubIssue["labels"][number]): string {
   return (typeof l === "string" ? l : l.name ?? "").toLowerCase();
-}
-
-/** Markdown -> one plain-text line. Good enough for excerpts and search. */
-export function toPlainText(md: string): string {
-  return md
-    .replace(/```[\s\S]*?```/g, " ")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
-    .replace(/`([^`]+)`/g, "$1")
-    .replace(/^\s{0,3}(#{1,6}|>|[-*+]|\d+\.)\s+/gm, "")
-    .replace(/\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/gi, "")
-    .replace(/\{%[^%]*%\}/g, " ")
-    .replace(/(\*\*|__|\*|_|~~)(.+?)\1/g, "$2")
-    .replace(/\s+/g, " ")
-    .trim();
 }
 
 function excerpt(body: string, max = 180): string {

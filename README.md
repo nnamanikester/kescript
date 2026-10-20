@@ -68,6 +68,27 @@ Drag images into the GitHub issue editor to upload them — GitHub hosts them fo
 
 ---
 
+## Writing from the site
+
+Go to **`/write`** (or click the pen in the header — only you see it). The editor *is* the post: same typography, code blocks, callouts and layout as the published page, but everything is editable.
+
+- **Title, subtitle, category, date and tags** are edited in place in the post header.
+- **`/`** opens the block menu: headings, lists, checklists, quotes, images, YouTube, posts on X, code (with a language picker and filename), code tabs, install commands (npm/pnpm/yarn/bun), Mermaid diagrams (previewed live), the five callouts, tables, equations, footnotes, collapsible sections, and raw Markdown/HTML.
+- **Select text** for bold, italic, strike, code, link and headings. Shortcuts: ⌘B, ⌘I, ⌘E, ⌘K (link), ⌘Z. Markdown shortcuts work too: `## `, `- `, `1. `, `> `, ` ``` `, `---`, `$x^2$`.
+- **Paste** Markdown from anywhere and it becomes blocks. Paste a YouTube or X link on an empty line and it becomes an embed. Paste or drop images to upload them.
+- **Preview** renders the draft with the real post pipeline (Shiki, KaTeX, embeds).
+- **Settings** (the sliders icon) holds what readers don't see: URL, SEO description, social image, featured, last-updated date and canonical URL.
+- **Drafts autosave to GitHub** as an issue labelled `draft` (the site never shows it), as soon as the post has a title. Saves happen after a 4-second pause in typing, at most once every 15 seconds, and at least every 30 seconds while you type non-stop. That stays well inside GitHub's write limits and keeps the issue's edit history readable. ⌘S saves immediately. If GitHub can't be reached, the draft is kept in this browser and retried. The repo is public, so drafts are readable on GitHub. **`/write/drafts`** lists every `draft` issue and every published post.
+- **Live posts never autosave.** Edits stay on your screen (and in this browser) until you press **Update**, so half-finished changes never reach readers.
+- **Unpublish** (in Settings, on a live post) takes it off the site and turns it back into a draft. The issue, comments and reactions are kept.
+- **Sign in / out** from the header. Readers use it to comment and react; you also get *Write a post* and *Drafts & posts* in its menu.
+
+**Publish** opens a new issue *as you* (or relabels the draft's issue) with `published`, with the frontmatter written for you, and refreshes the site immediately. On an existing post, the pen becomes **edit** next to the date. **Update** edits the same issue, and the URL is pinned so changing the title never breaks links. Anything you edit directly on GitHub still works; the editor reads it back.
+
+**Images** go to an `assets` branch of this repo (created on first upload, with deployments switched off for it) and are served from `raw.githubusercontent.com`. That needs **`GITHUB_TOKEN` with *Contents: Read and write*** on this repo: a fine-grained token with *Contents: Read and write* and *Issues: Read-only* is enough. The GitHub App deliberately doesn't get Contents access, so commenters are never asked to grant write access to code.
+
+Requires the GitHub App below. You must be signed in as an `approvedPosters` account (`src/lib/site.ts`). Everyone else gets a 404.
+
 ## Turn on native comments (one-time, ~5 minutes)
 
 Readers sign in with GitHub in a popup, then comment, edit, delete and react **as themselves** without leaving the page. Until this is configured, the comment box links to the GitHub issue instead.

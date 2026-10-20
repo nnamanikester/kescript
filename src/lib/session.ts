@@ -7,6 +7,11 @@ import type { Viewer } from "@/lib/reactions";
 
 export const SESSION_COOKIE = "ks_session";
 export const STATE_COOKIE = "ks_oauth_state";
+/**
+ * Readable by the page, and only a UI hint ("show the Write button"). It grants
+ * nothing: every write is checked against the sealed session on the server.
+ */
+export const OWNER_COOKIE = "ks_owner";
 const MAX_AGE = 60 * 60 * 24 * 30;
 
 export interface Session extends Viewer {

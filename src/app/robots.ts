@@ -8,9 +8,9 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        // Auth, comment writes and previews have nothing worth indexing.
+        // Auth, writes, previews and the author's editor have nothing worth indexing.
         // /api/og stays crawlable: social cards are fetched by bots.
-        disallow: ["/api/auth/", "/api/thread/", "/api/preview", "/api/revalidate"],
+        disallow: ["/api/auth/", "/api/thread/", "/api/preview", "/api/revalidate", "/api/write/", "/write"],
       },
     ],
     sitemap: `${SITE.url}/sitemap.xml`,

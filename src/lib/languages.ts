@@ -54,6 +54,7 @@ const LANGS: Record<string, { name: string; color: string }> = {
   ini: { name: "INI", color: "#d1dbe0" },
   env: { name: "Env", color: "#8a8a8a" },
   http: { name: "HTTP", color: "#005c9c" },
+  mermaid: { name: "Mermaid", color: "#ff3670" },
   plaintext: { name: "Text", color: "#8a8a8a" },
   text: { name: "Text", color: "#8a8a8a" },
   txt: { name: "Text", color: "#8a8a8a" },
@@ -63,3 +64,10 @@ export function languageInfo(lang: string | undefined): { name: string; color: s
   const key = (lang ?? "plaintext").toLowerCase();
   return LANGS[key] ?? { name: key.toUpperCase(), color: "#8a8a8a" };
 }
+
+/** The code block language picker, in rough order of how often they're written. */
+export const CODE_LANGUAGES = [
+  "plaintext", "ts", "tsx", "js", "jsx", "json", "bash", "console", "py", "go", "rust", "swift", "kotlin",
+  "java", "dart", "c", "cpp", "cs", "rb", "php", "html", "css", "scss", "sql", "graphql", "yaml", "toml",
+  "dockerfile", "md", "diff", "http", "env", "xml", "lua", "prisma", "mermaid",
+] as const;

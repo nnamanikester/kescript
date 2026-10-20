@@ -910,3 +910,204 @@ html.theme-reveal::view-transition-new(root) {
     animation: none;
   }
 }
+
+/* ─────────────────────────── writer (/write) ───────────────────────────
+ * The editor is the post: it reuses .prose, .code-block, .callout and the
+ * breakout grid. These rules only cover what editing adds — node-view
+ * wrappers, placeholders, selection and in-editor syntax colours.
+ */
+.writer-prose {
+  outline: none;
+  min-height: 45vh;
+  padding-bottom: 4rem;
+}
+/* TipTap wraps each custom block in div.react-renderer.node-<name>. */
+.writer-prose > .node-codeBlock,
+.writer-prose > .node-codeGroup,
+.writer-prose > .node-figure,
+.writer-prose > .node-embed,
+.writer-prose > .tableWrapper {
+  grid-column: popout;
+}
+.writer-prose .is-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--fg-subtle);
+  opacity: 0.65;
+}
+.writer-prose .ProseMirror-selectednode {
+  outline: 2px solid var(--accent-ring);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+.writer-prose ::selection {
+  background: var(--accent-soft);
+}
+.writer-prose a {
+  cursor: text;
+}
+
+/* Code */
+.writer-code pre code {
+  display: block;
+  padding: 0 1.15rem;
+  color: var(--fg);
+}
+.writer-code-group-body > [data-node-view-content-react] > .react-renderer + .react-renderer {
+  border-top: 1px solid var(--border);
+}
+.writer-code-group .code-block {
+  border-radius: 0;
+}
+.writer-prose .hljs-comment,
+.writer-prose .hljs-quote,
+.writer-prose .hljs-meta {
+  color: var(--fg-subtle);
+  font-style: italic;
+}
+.writer-prose .hljs-keyword,
+.writer-prose .hljs-selector-tag,
+.writer-prose .hljs-literal {
+  color: #cf222e;
+}
+.writer-prose .hljs-string,
+.writer-prose .hljs-regexp,
+.writer-prose .hljs-addition {
+  color: #0a3069;
+}
+.writer-prose .hljs-number,
+.writer-prose .hljs-attr,
+.writer-prose .hljs-attribute,
+.writer-prose .hljs-variable,
+.writer-prose .hljs-template-variable {
+  color: #0550ae;
+}
+.writer-prose .hljs-title,
+.writer-prose .hljs-section,
+.writer-prose .hljs-name {
+  color: #8250df;
+}
+.writer-prose .hljs-built_in,
+.writer-prose .hljs-type,
+.writer-prose .hljs-params,
+.writer-prose .hljs-tag {
+  color: #953800;
+}
+.writer-prose .hljs-deletion {
+  color: var(--danger);
+}
+[data-theme="dark"] .writer-prose .hljs-keyword,
+[data-theme="dark"] .writer-prose .hljs-selector-tag,
+[data-theme="dark"] .writer-prose .hljs-literal,
+[data-theme="dark"] .writer-prose .hljs-attr,
+[data-theme="dark"] .writer-prose .hljs-tag {
+  color: #a0a0a0;
+}
+[data-theme="dark"] .writer-prose .hljs-string,
+[data-theme="dark"] .writer-prose .hljs-regexp,
+[data-theme="dark"] .writer-prose .hljs-addition {
+  color: #99ffe4;
+}
+[data-theme="dark"] .writer-prose .hljs-number,
+[data-theme="dark"] .writer-prose .hljs-title,
+[data-theme="dark"] .writer-prose .hljs-section,
+[data-theme="dark"] .writer-prose .hljs-name,
+[data-theme="dark"] .writer-prose .hljs-variable,
+[data-theme="dark"] .writer-prose .hljs-template-variable {
+  color: #ffc799;
+}
+[data-theme="dark"] .writer-prose .hljs-built_in,
+[data-theme="dark"] .writer-prose .hljs-type,
+[data-theme="dark"] .writer-prose .hljs-params {
+  color: #ffffff;
+}
+
+/* Callouts: paragraphs live one level deeper than on the site. */
+.writer-prose .callout-body [data-node-view-content-react] > * + * {
+  margin-top: 0.7em;
+}
+
+/* Checklists */
+.writer-prose ul[data-type="taskList"] {
+  padding-left: 0.2em;
+}
+.writer-prose ul[data-type="taskList"] > li {
+  display: flex;
+  gap: 0.65em;
+  align-items: flex-start;
+}
+.writer-prose ul[data-type="taskList"] > li::before {
+  display: none;
+}
+.writer-prose ul[data-type="taskList"] > li > label {
+  margin-top: 0.32em;
+  user-select: none;
+}
+.writer-prose ul[data-type="taskList"] > li > div {
+  flex: 1;
+  min-width: 0;
+}
+.writer-prose ul[data-type="taskList"] > li[data-checked="true"] > div {
+  color: var(--fg-subtle);
+  text-decoration: line-through;
+}
+
+/* Tables */
+.writer-prose .tableWrapper {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.writer-prose td,
+.writer-prose th {
+  position: relative;
+  vertical-align: top;
+}
+.writer-prose :where(td, th) > p {
+  margin: 0;
+}
+.writer-prose .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--accent-soft);
+  pointer-events: none;
+}
+
+/* Figures */
+.writer-caption {
+  display: block;
+  width: 100%;
+  margin-top: 0.75em;
+  background: transparent;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--fg-subtle);
+  outline: none;
+}
+.writer-caption::placeholder {
+  color: var(--fg-subtle);
+  opacity: 0.5;
+}
+
+/* Maths, raw markdown, inline atoms */
+.writer-math {
+  border-radius: 10px;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+}
+.writer-inline.is-selected > :first-child {
+  border-radius: 4px;
+  box-shadow: 0 0 0 2px var(--accent-ring);
+}
+.writer-raw-inline {
+  border-style: dashed !important;
+}
+
+/* The toast moves above the writer's dock. */
+body:has([data-writer]) .site-toast {
+  bottom: 6rem;
+}

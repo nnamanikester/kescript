@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { GitHubError, threadTag } from "@/lib/github";
 import { POSTS_TAG } from "@/lib/content";
+import { GH } from "@/lib/site";
 import { getSession, isSameOrigin, SESSION_COOKIE, type Session } from "@/lib/session";
 
 export function json(data: unknown, status = 200, headers?: HeadersInit) {
@@ -34,6 +35,33 @@ export async function withViewer(req: Request, fn: (session: Session) => Promise
         );
       }
       return json({ error: "github", message: err.message }, 502);
+    }
+    console.error(err);
+    return json({ error: "server", message: "Something went wrong" }, 500);
+  }
+}
+
+/**
+ * Guard for the author-only write API. Anyone else gets a 404, so the
+ * endpoints don't advertise themselves. GitHub's own messages pass through:
+ * they're for the author, and they say exactly what to fix.
+ */
+export async function withOwner(req: Request, fn: (session: Session) => Promise<Response>): Promise<Response> {
+  if (!isSameOrigin(req)) return json({ error: "forbidden", message: "Cross-site request blocked" }, 403);
+  const session = await getSession();
+  if (!session) return json({ error: "auth", message: "Your session ended — sign in again" }, 401);
+  if (!(GH.approvedPosters as readonly string[]).includes(session.login)) return json({ error: "not_found" }, 404);
+  try {
+    return await fn(session);
+  } catch (err) {
+    if (err instanceof GitHubError) {
+      if (err.status === 401) {
+        const res = json({ error: "auth", message: "Your GitHub session expired — sign in again" }, 401);
+        res.cookies.delete(SESSION_COOKIE);
+        return res;
+      }
+      const status = [403, 404, 409, 422].includes(err.status) ? err.status : 502;
+      return json({ error: "github", message: err.message }, status);
     }
     console.error(err);
     return json({ error: "server", message: "Something went wrong" }, 500);

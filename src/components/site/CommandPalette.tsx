@@ -43,6 +43,8 @@ export function CommandPalette() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // An editor that used ⌘K itself (e.g. "add link" in /write) has already called preventDefault.
+      if (e.defaultPrevented) return;
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         returnFocusTo = document.activeElement as HTMLElement;

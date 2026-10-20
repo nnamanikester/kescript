@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getViewer } from "@/lib/github";
-import { seal, sessionCookieOptions, SESSION_COOKIE, STATE_COOKIE, unseal, type Session } from "@/lib/session";
+import { GH } from "@/lib/site";
+import { OWNER_COOKIE, seal, sessionCookieOptions, SESSION_COOKIE, STATE_COOKIE, unseal, type Session } from "@/lib/session";
 
 interface OAuthState {
   state: string;
@@ -61,6 +62,11 @@ export async function GET(req: NextRequest) {
 
   const res = popup ? popupResponse(url.origin, true) : NextResponse.redirect(new URL(saved.returnTo, url.origin));
   res.cookies.set(SESSION_COOKIE, await seal(session), sessionCookieOptions);
+  if ((GH.approvedPosters as readonly string[]).includes(session.login)) {
+    res.cookies.set(OWNER_COOKIE, "1", { ...sessionCookieOptions, httpOnly: false });
+  } else {
+    res.cookies.delete(OWNER_COOKIE);
+  }
   res.cookies.delete({ name: STATE_COOKIE, path: "/api/auth" });
   return res;
 }
