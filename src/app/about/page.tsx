@@ -94,14 +94,12 @@ export default function AboutPage() {
         </SectionTitle>
         <div className="mb-8 space-y-4 text-[1.0625rem] leading-[1.75] text-muted">
           <p>
-            I write for a younger me. Sometimes that&apos;s me five years ago, staring at a crash log from a phone I
-            didn&apos;t own. Sometimes it&apos;s me last month, before something finally clicked. Every post is the
-            explanation I wish someone had handed me then.
+            I created this blog as a space to publish my thoughts, document what I&apos;ve learned, and write notes to my
+            younger self — whether that younger self was from 5 years ago, a month ago, or literally 2 minutes ago
+            before I figured something out. The goal has always been simple: share what I learn so others don&apos;t
+            have to stumble in the dark.
           </p>
-          <p>
-            If you&apos;re standing where I stood — whether that was years ago or a few weeks ago — I hope it saves you
-            some of the time it cost me. Life gets a say too, but the engineering mostly lands here:
-          </p>
+          <p>Life gets a say too, but the engineering mostly lands here:</p>
         </div>
         <div className="grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2">
           {TOPICS.map((t) => (
