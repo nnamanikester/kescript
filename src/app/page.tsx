@@ -57,7 +57,7 @@ export default async function Home() {
         <div className="mt-7 max-w-[58ch] space-y-4 text-[1.0625rem] leading-relaxed text-muted animate-fade-up" style={{ animationDelay: "120ms" }}>
           <p>
             Letters to a younger me, sent a month or five years too late. I write about building things, like software,
-            habits, and a life, and mostly about the parts I had to learn twice, so you only have to learn them once.
+            habits, and life, and mostly about the parts I had to learn twice, so you only have to learn them once.
             Still figuring it out (at least everyone is).
           </p>
         </div>

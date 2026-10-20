@@ -16,7 +16,7 @@ export const metadata: Metadata = pageMetadata({
   path: "/blog",
   socialTitle: "Writing — notes to a younger me",
   description:
-    "Essays, tutorials and notes by John Nnamani on building things — software, habits and a life. Written for an earlier me, so you only learn them once. Fully searchable.",
+    "Essays, tutorials and notes by John Nnamani on building things — software, habits and life. Written for an earlier me, so you only learn them once. Fully searchable.",
 });
 
 export default async function BlogPage() {

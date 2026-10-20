@@ -12,7 +12,7 @@ export const metadata: Metadata = pageMetadata({
   title: `About ${SITE.author}`,
   path: "/about",
   socialTitle: `About ${SITE.author}`,
-  description: `Software engineer in ${SITE.location} who writes letters to a younger me — about software, habits and a life. Story, principles and timeline.`,
+  description: `Software engineer in ${SITE.location} who writes letters to a younger me — about software, habits and life. Story, principles and timeline.`,
 });
 
 const SHORT_BIO = `${SITE.author} (@${SITE.handle}) is a software engineer based in ${SITE.location}. John has shipped React Native and full-stack products since 2018 — five-plus apps across the App Store and Play Store — now works on AI developer tooling, and writes at ${SITE.url.replace(/^https?:\/\//, "")}.`;
