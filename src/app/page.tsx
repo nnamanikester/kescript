@@ -17,10 +17,10 @@ import { PaletteHint } from "@/components/site/PaletteHint";
 export const revalidate = 300;
 
 export const metadata: Metadata = pageMetadata({
-  title: `${SITE.author} — React Native, TypeScript & AI engineering notes`,
+  title: `${SITE.name} — Letters to a younger me, by ${SITE.author}`,
   absoluteTitle: true,
   path: "/",
-  socialTitle: "Notes to a younger me, on building software",
+  socialTitle: "Letters to a younger me",
   kicker: "~/kescript",
   description: SITE.description,
 });
@@ -49,22 +49,17 @@ export default async function Home() {
           className="mt-8 text-balance text-[2.6rem] font-semibold leading-[1.02] tracking-[-0.045em] text-fg animate-fade-up sm:text-[3.6rem]"
           style={{ animationDelay: "60ms" }}
         >
-          Notes to a{" "}
-          <span className="font-serif text-[1.12em] font-normal italic tracking-[-0.02em] text-accent">younger me</span>, on
-          building software.
+          Letters to a{" "}
+          <span className="font-serif text-[1.12em] font-normal italic tracking-[-0.02em] text-accent">younger me</span>, sent
+          a month or five years too late.
         </h1>
 
         <div className="mt-7 max-w-[58ch] space-y-4 text-[1.0625rem] leading-relaxed text-muted animate-fade-up" style={{ animationDelay: "120ms" }}>
           <p>
-            I&apos;m <span className="text-fg">{SITE.author}</span>. Since 2018 I&apos;ve shipped React Native apps for
-            logistics, payments, real-time calling and meditation — mostly learning that the interesting problems live at
-            the edges: slow phones, flaky networks, release pipelines, and ledgers that have to add up. Lately I work on
-            systems with a language model somewhere in the loop.
+            I&apos;m <span className="text-fg">{SITE.author}</span>. I write about building things, like software, habits,
+            and a life, and mostly about the parts I had to learn twice, so you only have to learn them once.
           </p>
-          <p>
-            Everything here is written for an earlier version of me — five years ago or last month — and for anyone standing
-            where I stood.
-          </p>
+          <p>Still figuring it out (at least everyone is).</p>
         </div>
 
         <div className="mt-9 flex flex-wrap items-center gap-3 animate-fade-up" style={{ animationDelay: "180ms" }}>

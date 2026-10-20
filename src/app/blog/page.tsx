@@ -14,9 +14,9 @@ export const revalidate = 300;
 export const metadata: Metadata = pageMetadata({
   title: "Writing",
   path: "/blog",
-  socialTitle: "Writing — notes to a younger me",
+  socialTitle: "Writing — letters to a younger me",
   description:
-    "Essays, tutorials and notes by John Nnamani on React Native in production, TypeScript, release engineering and building with LLMs. Fully searchable.",
+    "Essays, tutorials and notes by John Nnamani on building things — software, habits and a life. Written for an earlier me, so you only learn them once. Fully searchable.",
 });
 
 export default async function BlogPage() {
