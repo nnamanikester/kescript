@@ -20,7 +20,7 @@ export const metadata: Metadata = pageMetadata({
   title: `John @${SITE.handle} Nnamani`,
   absoluteTitle: true,
   path: "/",
-  socialTitle: "Notes to a younger me, on building software",
+  socialTitle: `John @${SITE.handle} Nnamani`,
   kicker: "~/kescript",
   description: SITE.description,
 });
@@ -49,9 +49,9 @@ export default async function Home() {
           className="mt-8 text-balance text-[2.6rem] font-semibold leading-[1.02] tracking-[-0.045em] text-fg animate-fade-up sm:text-[3.6rem]"
           style={{ animationDelay: "60ms" }}
         >
-          Notes to a{" "}
-          <span className="font-serif text-[1.12em] font-normal italic tracking-[-0.02em] text-accent">younger me</span>, on
-          building software.
+          John{" "}
+          <span className="font-serif text-[1.12em] font-normal italic tracking-[-0.02em] text-accent">@{SITE.handle}</span>{" "}
+          Nnamani
         </h1>
 
         <div className="mt-7 max-w-[58ch] space-y-4 text-[1.0625rem] leading-relaxed text-muted animate-fade-up" style={{ animationDelay: "120ms" }}>
