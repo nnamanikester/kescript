@@ -17,10 +17,10 @@ import { PaletteHint } from "@/components/site/PaletteHint";
 export const revalidate = 300;
 
 export const metadata: Metadata = pageMetadata({
-  title: `${SITE.name} — Letters to a younger me, by ${SITE.author}`,
+  title: `${SITE.author} — React Native, TypeScript & AI engineering notes`,
   absoluteTitle: true,
   path: "/",
-  socialTitle: "Letters to a younger me",
+  socialTitle: "Notes to a younger me, on building software",
   kicker: "~/kescript",
   description: SITE.description,
 });
@@ -49,17 +49,17 @@ export default async function Home() {
           className="mt-8 text-balance text-[2.6rem] font-semibold leading-[1.02] tracking-[-0.045em] text-fg animate-fade-up sm:text-[3.6rem]"
           style={{ animationDelay: "60ms" }}
         >
-          Letters to a{" "}
-          <span className="font-serif text-[1.12em] font-normal italic tracking-[-0.02em] text-accent">younger me</span>, sent
-          a month or five years too late.
+          Notes to a{" "}
+          <span className="font-serif text-[1.12em] font-normal italic tracking-[-0.02em] text-accent">younger me</span>, on
+          building software.
         </h1>
 
         <div className="mt-7 max-w-[58ch] space-y-4 text-[1.0625rem] leading-relaxed text-muted animate-fade-up" style={{ animationDelay: "120ms" }}>
           <p>
-            I&apos;m <span className="text-fg">{SITE.author}</span>. I write about building things, like software, habits,
-            and a life, and mostly about the parts I had to learn twice, so you only have to learn them once.
+            Letters to a younger me, sent a month or five years too late. I write about building things, like software,
+            habits, and a life, and mostly about the parts I had to learn twice, so you only have to learn them once.
+            Still figuring it out (at least everyone is).
           </p>
-          <p>Still figuring it out (at least everyone is).</p>
         </div>
 
         <div className="mt-9 flex flex-wrap items-center gap-3 animate-fade-up" style={{ animationDelay: "180ms" }}>

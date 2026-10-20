@@ -8,7 +8,7 @@ export const SITE = {
   author: "John Nnamani",
   handle: "kescript",
   title: "KeScript — John Nnamani",
-  tagline: "Letters to a younger me, sent a month or five years too late.",
+  tagline: "Notes to a younger me, on building software.",
   description:
     "Letters to a younger me, sent a month or five years too late. John Nnamani on building things — software, habits and a life — so you only learn them once.",
   url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://kescript.com").replace(/\/$/, ""),

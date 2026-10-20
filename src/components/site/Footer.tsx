@@ -24,8 +24,8 @@ export function Footer() {
         <div className="grid gap-10 sm:grid-cols-[1.5fr_1fr_1fr]">
           <div>
             <p className="max-w-xs text-sm leading-relaxed text-muted">
-              Letters to a <span className="font-serif text-[1.05rem] italic text-fg">younger me</span>, sent a month
-              or five years too late. Published in case they help you too.
+              Notes to a <span className="font-serif text-[1.05rem] italic text-fg">younger me</span>, on building
+              software. Published in case they help you too.
             </p>
             <div className="mt-5 flex items-center gap-1">
               {SOCIAL.map(({ href, label, Icon }) => (

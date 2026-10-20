@@ -14,7 +14,7 @@ export const revalidate = 300;
 export const metadata: Metadata = pageMetadata({
   title: "Writing",
   path: "/blog",
-  socialTitle: "Writing — letters to a younger me",
+  socialTitle: "Writing — notes to a younger me",
   description:
     "Essays, tutorials and notes by John Nnamani on building things — software, habits and a life. Written for an earlier me, so you only learn them once. Fully searchable.",
 });
