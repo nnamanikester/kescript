@@ -12,7 +12,7 @@ export const metadata: Metadata = pageMetadata({
   title: `About ${SITE.author}`,
   path: "/about",
   socialTitle: `About ${SITE.author}`,
-  description: `Software engineer in ${SITE.location}. Shipping React Native and full-stack apps since 2018, now building AI developer tooling. Story, principles and timeline.`,
+  description: `Software engineer in ${SITE.location} who writes letters to a younger me — about software, habits and life. Story, principles and timeline.`,
 });
 
 const SHORT_BIO = `${SITE.author} (@${SITE.handle}) is a software engineer based in ${SITE.location}. John has shipped React Native and full-stack products since 2018 — five-plus apps across the App Store and Play Store — now works on AI developer tooling, and writes at ${SITE.url.replace(/^https?:\/\//, "")}.`;
@@ -100,7 +100,7 @@ export default function AboutPage() {
           </p>
           <p>
             If you&apos;re standing where I stood — whether that was years ago or a few weeks ago — I hope it saves you
-            some of the time it cost me. It&apos;s mostly about these things:
+            some of the time it cost me. Life gets a say too, but the engineering mostly lands here:
           </p>
         </div>
         <div className="grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2">

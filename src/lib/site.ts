@@ -10,7 +10,7 @@ export const SITE = {
   title: "KeScript — John Nnamani",
   tagline: "Notes to a younger me, on building software.",
   description:
-    "Explanations I wish I'd had earlier — React Native in production, the web platform, and systems with an LLM somewhere in the loop. By John Nnamani.",
+    "Letters to a younger me, sent a month or five years too late. John Nnamani on building things — software, habits and life — so you only learn them once.",
   url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://kescript.com").replace(/\/$/, ""),
   email: "nnamanikester@gmail.com",
   location: "Lisbon, Portugal",
