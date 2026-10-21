@@ -9,7 +9,7 @@ import { NOW, NOW_UPDATED } from "@/lib/data";
 import { SITE } from "@/lib/site";
 import { formatDate } from "@/lib/utils";
 import { PostRow } from "@/components/blog/PostRow";
-import { PostArt } from "@/components/ui/PostArt";
+import { PostCover } from "@/components/ui/PostCover";
 import { SectionTitle } from "@/components/ui/PageHeader";
 import { Subscribe } from "@/components/site/Subscribe";
 import { PaletteHint } from "@/components/site/PaletteHint";
@@ -96,7 +96,7 @@ export default async function Home() {
                 >
                   <ViewTransition name={`art-${p.slug}`} share="morph" default="none">
                     <div className="border-b border-line bg-elev">
-                      <PostArt slug={p.slug} className="block aspect-[24/10] w-full" />
+                      <PostCover slug={p.slug} image={p.image} className="aspect-[24/10]" sizes="(min-width: 640px) 380px, 100vw" />
                     </div>
                   </ViewTransition>
                   <div className="flex flex-1 flex-col p-5">

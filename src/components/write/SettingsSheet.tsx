@@ -9,7 +9,7 @@ import type { Meta } from "./HeaderFields";
 import { imageFiles, uploadImage } from "./upload";
 import { AiWand } from "./AiWand";
 import { DELETE_CONFIRM } from "./deleteDraft";
-import type { AiField } from "./ai";
+import type { AiField, MetaSuggestion } from "./ai";
 
 interface Props {
   open: boolean;
@@ -24,6 +24,8 @@ interface Props {
   onChange: (patch: Partial<Meta>) => void;
   onDiscard: () => void;
   onGenerate?: (field: AiField) => Promise<void>;
+  /** What a generated description was built from: the post's favourite part and the search phrase. */
+  basis?: Pick<MetaSuggestion, "favorite" | "quoted" | "keyword"> | null;
 }
 
 function Field({ label, hint, children }: { label: string; hint?: React.ReactNode; children: React.ReactNode }) {
@@ -40,7 +42,7 @@ const input =
   "w-full rounded-lg border border-line bg-bg px-3 py-2 text-sm text-fg outline-none transition-colors placeholder:text-faint focus:border-line-strong";
 
 /** Everything a reader doesn't see on the page: URL, SEO, social card. */
-export function SettingsSheet({ open, onClose, meta, autoSlug, autoDescription, issue, busy, onUnpublish, onDelete, onChange, onDiscard, onGenerate }: Props) {
+export function SettingsSheet({ open, onClose, meta, autoSlug, autoDescription, issue, busy, onUnpublish, onDelete, onChange, onDiscard, onGenerate, basis }: Props) {
   const panel = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -112,7 +114,7 @@ export function SettingsSheet({ open, onClose, meta, autoSlug, autoDescription, 
             label="Description"
             hint={
               <>
-                For Google and link previews. Aim for 120–160 characters.{" "}
+                For Google and link previews. Aim for 120–155 characters.{" "}
                 <span className={desc > 160 ? "text-danger" : desc >= 120 ? "text-ok" : ""}>{desc ? `${desc} now.` : "Empty uses the first paragraph."}</span>
               </>
             }
@@ -126,9 +128,27 @@ export function SettingsSheet({ open, onClose, meta, autoSlug, autoDescription, 
               className={`${input} resize-none ${onGenerate ? "pr-10" : ""}`}
             />
             {onGenerate && (
-              <AiWand label="Write a description from the post" onGenerate={() => onGenerate("description")} className="absolute right-1 top-1" />
+              <AiWand label="Write a description from the post's conclusion" onGenerate={() => onGenerate("description")} className="absolute right-1 top-1" />
             )}
             </div>
+            {basis && (
+              <span className="mt-2 block space-y-2 rounded-lg border border-line bg-subtle px-3 py-2 text-xs leading-relaxed text-muted">
+                {basis.favorite && (
+                  <span className="block">
+                    <span className="block font-mono text-[0.65rem] uppercase tracking-[0.08em] text-faint">
+                      Favourite part{basis.quoted === false && " · reworded, not found word for word"}
+                    </span>
+                    <span className="mt-0.5 block italic">“{basis.favorite}”</span>
+                  </span>
+                )}
+                {basis.keyword && (
+                  <span className="block">
+                    <span className="block font-mono text-[0.65rem] uppercase tracking-[0.08em] text-faint">Search phrase</span>
+                    <span className="mt-0.5 block font-mono">{basis.keyword}</span>
+                  </span>
+                )}
+              </span>
+            )}
           </Field>
 
           <Field label="Social image" hint="Shown when the post is shared. Leave empty for the generated card.">

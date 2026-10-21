@@ -460,9 +460,12 @@ export default function Writer({
   };
 
   /** Fill one metadata field from the post. Undo is just editing the field. */
+  /** What the last generated description was built from, shown under it in Settings. */
+  const [basis, setBasis] = useState<Pick<MetaSuggestion, "favorite" | "quoted" | "keyword"> | null>(null);
   const generate = async (field: AiField) => {
     const res = await askAI<MetaSuggestion>({ task: "meta", field, draft: currentDraft() });
     if (res[field]) updateMeta({ [field]: res[field] });
+    if (field === "description") setBasis(res.favorite || res.keyword ? { favorite: res.favorite, quoted: res.quoted, keyword: res.keyword } : null);
   };
 
   // ⌘S saves now; leaving the page sends whatever autosave hadn't yet.
@@ -715,6 +718,7 @@ export default function Writer({
         onDelete={() => void deleteDraft()}
         onChange={updateMeta}
         onGenerate={ai ? generate : undefined}
+        basis={basis}
         onDiscard={() => {
           clearStored(key);
           loadDraft(

@@ -70,7 +70,40 @@ describe("RAGBase", () => {
 
     const filtered = base.with({ retriever: new KeywordRetriever({ docs, k: 3 }), filter: (d) => d.filter((x) => x.metadata.id !== "habits") });
     expect((await filtered.run("habits email")).sources).toEqual([]);
-    expect(Object.keys(base.graph.getGraph().nodes)).toEqual(expect.arrayContaining(["retrieve", "generate", "parse"]));
+    expect(Object.keys(base.graph.getGraph().nodes)).toEqual(expect.arrayContaining(["retrieve", "generate", "parse", "check"]));
+  });
+});
+
+describe("RAGBase validate loop", () => {
+  const task = (llm: RecordingChatModel, maxAttempts?: number) =>
+    new RAGBase<string>({
+      llm,
+      instructions: "Reply with one word.",
+      prompt: (i) => i,
+      validate: (out) => (out.includes(" ") ? "Use exactly one word." : null),
+      maxAttempts,
+    });
+
+  it("sends a broken answer back with the reason, then accepts the fix", async () => {
+    const llm = new RecordingChatModel(["two words", "one"]);
+    const result = await task(llm).run("go");
+    expect(result).toMatchObject({ output: "one", attempts: 2, problem: null });
+    const retry = llm.calls[1];
+    expect(retry.map((m) => m.type)).toEqual(["system", "human", "ai", "human"]);
+    expect(retry[2].text).toBe("two words");
+    expect(retry[3].text).toContain("Use exactly one word.");
+  });
+
+  it("stops after maxAttempts and reports what's still wrong", async () => {
+    const llm = new RecordingChatModel(["still two", "and again", "never"]);
+    const result = await task(llm, 2).run("go");
+    expect(result).toMatchObject({ output: "and again", attempts: 2, problem: "Use exactly one word." });
+    expect(llm.calls).toHaveLength(2);
+  });
+
+  it("makes one call when the first answer passes", async () => {
+    const llm = new RecordingChatModel("fine");
+    expect(await task(llm).run("go")).toMatchObject({ output: "fine", attempts: 1 });
   });
 });
 

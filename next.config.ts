@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { IMAGE_HOSTS } from "./src/lib/image-hosts";
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -10,12 +11,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   images: {
-    remotePatterns: [
-      { protocol: "https", hostname: "avatars.githubusercontent.com" },
-      { protocol: "https", hostname: "github.com" },
-      { protocol: "https", hostname: "user-images.githubusercontent.com" },
-      { protocol: "https", hostname: "images.unsplash.com" },
-    ],
+    remotePatterns: IMAGE_HOSTS.map((hostname) => ({ protocol: "https" as const, hostname })),
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

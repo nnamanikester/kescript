@@ -6,6 +6,12 @@ export type AiField = "title" | "description" | "tags";
 export interface MetaSuggestion {
   title?: string;
   description?: string;
+  /** With a description: the passage it was built from… */
+  favorite?: string;
+  /** …whether that passage is word for word in the post… */
+  quoted?: boolean;
+  /** …and the search phrase it targets. */
+  keyword?: string;
   tags?: string[];
 }
 

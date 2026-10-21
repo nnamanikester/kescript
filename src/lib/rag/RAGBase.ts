@@ -1,11 +1,14 @@
 /**
  * RAGBase: retrieval-augmented generation as a small LangGraph graph.
  *
- *   START → retrieve → generate → parse → END
+ *   START → retrieve → generate → parse → check ─┬─→ END
+ *                         ↑                       │
+ *                         └── rule broken, retry ─┘
  *
  *  - retrieve: any LangChain retriever (BM25, a vector store's .asRetriever(), an EnsembleRetriever…)
  *  - generate: a ChatPromptTemplate piped into any LangChain chat model
  *  - parse:    your function from the model's text to a typed output
+ *  - check:    your rules in code; a broken one goes back to the model with the reason
  *
  * Everything that varies between tasks is an option, so a task is just a
  * configured instance:
@@ -21,7 +24,7 @@
  */
 import type { DocumentInterface } from "@langchain/core/documents";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import type { BaseMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage, type BaseMessage } from "@langchain/core/messages";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
 import type { BaseRetrieverInterface } from "@langchain/core/retrievers";
@@ -48,6 +51,13 @@ export interface RAGBaseOptions<I, O> {
   history?: (input: I) => BaseMessage[];
   /** Reads the model's text into the output type. Default: trimmed text. */
   parse?: (text: string, input: I) => O;
+  /**
+   * Rules checked in code. Return what's wrong (sent back to the model, which
+   * tries again) or nothing when the output passes.
+   */
+  validate?: (output: O, input: I) => string | null | undefined;
+  /** Model calls allowed when validate keeps failing. Default 2; the last output is returned either way. */
+  maxAttempts?: number;
 }
 
 export interface RAGResult<O> {
@@ -56,6 +66,10 @@ export interface RAGResult<O> {
   sources: DocumentInterface[];
   /** The model's raw text, before parse(). */
   text: string;
+  /** Model calls made: more than 1 when validate sent an answer back. */
+  attempts: number;
+  /** What validate still objected to after the last attempt, if anything. */
+  problem: string | null;
 }
 
 export function defaultFormatContext(docs: DocumentInterface[]): string {
@@ -79,35 +93,47 @@ export class RAGBase<I, O = string> {
       sources: Annotation<DocumentInterface[]>,
       text: Annotation<string>,
       output: Annotation<O>,
+      attempts: Annotation<number>,
+      /** Why validate rejected the last answer; the next generate sees it. */
+      problem: Annotation<string | null>,
     });
     type S = typeof State.State;
 
     const retrieve = async ({ input }: S, config?: RunnableConfig) => ({ sources: await this.retrieve(input, config) });
 
-    const generate = async ({ input, sources }: S, config?: RunnableConfig) => {
+    const generate = async ({ input, sources, text: previous, problem, attempts }: S, config?: RunnableConfig) => {
       const o = this.options;
       const chain = PROMPT.pipe(o.llm).pipe(new StringOutputParser());
+      const request = o.prompt(input, (o.formatContext ?? defaultFormatContext)(sources, input));
+      const history = o.history?.(input) ?? [];
       const text = await chain.invoke(
         {
           instructions: typeof o.instructions === "function" ? o.instructions(input) : o.instructions,
-          history: o.history?.(input) ?? [],
-          request: o.prompt(input, (o.formatContext ?? defaultFormatContext)(sources, input)),
+          // A retry continues the conversation: the request, the rejected answer, then what was wrong with it.
+          history: problem ? [...history, new HumanMessage(request), new AIMessage(previous)] : history,
+          request: problem ? `That breaks a rule: ${problem} Reply again in the same format, fixing it.` : request,
         },
         config,
       );
-      return { text };
+      return { text, attempts: (attempts ?? 0) + 1 };
     };
 
     const parse = ({ input, text }: S) => ({ output: this.options.parse ? this.options.parse(text, input) : (text.trim() as O) });
+
+    const check = ({ input, output }: S) => ({ problem: this.options.validate?.(output, input) || null });
+
+    const next = ({ problem, attempts }: S) => (problem && attempts < (this.options.maxAttempts ?? 2) ? "generate" : END);
 
     this.graph = new StateGraph(State)
       .addNode("retrieve", retrieve)
       .addNode("generate", generate)
       .addNode("parse", parse)
+      .addNode("check", check)
       .addEdge(START, "retrieve")
       .addEdge("retrieve", "generate")
       .addEdge("generate", "parse")
-      .addEdge("parse", END)
+      .addEdge("parse", "check")
+      .addConditionalEdges("check", next, ["generate", END])
       .compile();
   }
 
@@ -127,8 +153,8 @@ export class RAGBase<I, O = string> {
 
   /** Runs the graph. `signal` cancels the model call when the client goes away. */
   async run(input: I, { signal }: { signal?: AbortSignal } = {}): Promise<RAGResult<O>> {
-    const state = await this.graph.invoke({ input }, { signal });
-    return { output: state.output as O, sources: state.sources ?? [], text: state.text };
+    const state = await this.graph.invoke({ input, attempts: 0, problem: null }, { signal });
+    return { output: state.output as O, sources: state.sources ?? [], text: state.text, attempts: state.attempts, problem: state.problem };
   }
 }
 
