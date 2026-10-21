@@ -164,6 +164,8 @@ export interface PublishResult {
   url: string;
   slug: string;
   status: PostStatus;
+  /** The issue's updated_at after the write, so the site can wait until GitHub's list shows it. */
+  updatedAt: string;
 }
 
 const result = (issue: GitHubIssue, slug: string): PublishResult => ({
@@ -171,6 +173,7 @@ const result = (issue: GitHubIssue, slug: string): PublishResult => ({
   url: issue.html_url,
   slug,
   status: statusOf(issue),
+  updatedAt: issue.updated_at,
 });
 
 /** A new issue, either straight to the blog or parked as a draft. */

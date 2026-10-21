@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { GitHubError, threadTag } from "@/lib/github";
-import { POSTS_TAG } from "@/lib/content";
+import { POSTS_TAG, waitForListing } from "@/lib/content";
 import { GH } from "@/lib/site";
 import { getSession, isSameOrigin, SESSION_COOKIE, type Session } from "@/lib/session";
 
@@ -72,6 +72,16 @@ export async function withOwner(req: Request, fn: (session: Session) => Promise<
 export function invalidateThread(issueNumber: number) {
   revalidateTag(threadTag(issueNumber), { expire: 0 });
   revalidateTag(POSTS_TAG, "max");
+}
+
+/**
+ * After a post goes on, off or changes on the blog: wait for GitHub's issue list
+ * to show it (see waitForListing), then drop the cached pages so the next visit
+ * rebuilds them from the new list.
+ */
+export async function refreshPosts(issue: { number: number; updatedAt?: string }, listed: boolean) {
+  await waitForListing(issue, listed);
+  revalidateTag(POSTS_TAG, { expire: 0 });
 }
 
 export const MAX_COMMENT_LENGTH = 65_536;

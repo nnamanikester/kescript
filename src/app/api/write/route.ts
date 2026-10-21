@@ -1,6 +1,4 @@
-import { revalidateTag } from "next/cache";
-import { json, readBody, withOwner } from "@/lib/api";
-import { POSTS_TAG } from "@/lib/content";
+import { json, readBody, refreshPosts, withOwner } from "@/lib/api";
 import { validateDraft } from "@/lib/editor/draft";
 import { createPost } from "@/lib/write";
 
@@ -12,7 +10,7 @@ export async function POST(req: Request) {
     const result = validateDraft(input, { publishing });
     if ("error" in result) return json({ error: "invalid", message: result.error }, 400);
     const post = await createPost(session.token, result.draft, publishing ? "published" : "draft");
-    if (publishing) revalidateTag(POSTS_TAG, { expire: 0 });
+    if (publishing) await refreshPosts(post, true);
     return json(post, 201);
   });
 }

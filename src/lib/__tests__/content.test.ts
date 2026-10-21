@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { parseIssue, parseNextLink, toPlainText, type GitHubIssue } from "../content";
+import { afterEach, describe, it, expect, vi } from "vitest";
+import { parseIssue, parseNextLink, toPlainText, waitForListing, type GitHubIssue } from "../content";
 import { formatDate, relativeTime, slugify } from "../utils";
 
 const issue = (over: Partial<GitHubIssue> = {}): GitHubIssue => ({
@@ -77,5 +77,49 @@ describe("helpers", () => {
     const now = Date.parse("2025-06-10T00:00:00Z");
     expect(relativeTime("2025-06-09T00:00:00Z", now)).toBe("1 day ago");
     expect(relativeTime("2025-06-09T23:59:50Z", now)).toBe("just now");
+  });
+});
+
+describe("waitForListing", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  /** GitHub's list as it looks on each successive call: the last one repeats. */
+  function listSequence(...lists: GitHubIssue[][]) {
+    let n = 0;
+    const calls: string[] = [];
+    vi.stubGlobal("fetch", async (url: string, init: RequestInit) => {
+      calls.push(url);
+      expect(init.cache).toBe("no-store");
+      return Response.json(lists[Math.min(n++, lists.length - 1)]);
+    });
+    return calls;
+  }
+  const fast = { intervalMs: 1, timeoutMs: 200 };
+
+  it("waits until a published issue shows up in the list", async () => {
+    const calls = listSequence([], [], [issue({ number: 14 })]);
+    expect(await waitForListing({ number: 14 }, true, fast)).toBe(true);
+    expect(calls).toHaveLength(3);
+    expect(calls[0]).toContain("labels=published");
+    expect(calls[0]).toContain("sort=updated");
+  });
+
+  it("waits for the edit, not an older copy of the issue", async () => {
+    const old = issue({ number: 14, updated_at: "2026-10-21T12:00:00Z" });
+    const fresh = issue({ number: 14, updated_at: "2026-10-21T12:24:45Z" });
+    const calls = listSequence([old], [fresh]);
+    expect(await waitForListing({ number: 14, updatedAt: "2026-10-21T12:24:45Z" }, true, fast)).toBe(true);
+    expect(calls).toHaveLength(2);
+  });
+
+  it("waits until an unpublished issue leaves the list", async () => {
+    const calls = listSequence([issue({ number: 14 })], []);
+    expect(await waitForListing({ number: 14 }, false, fast)).toBe(true);
+    expect(calls).toHaveLength(2);
+  });
+
+  it("gives up after the timeout", async () => {
+    listSequence([]);
+    expect(await waitForListing({ number: 14 }, true, { intervalMs: 5, timeoutMs: 30 })).toBe(false);
   });
 });

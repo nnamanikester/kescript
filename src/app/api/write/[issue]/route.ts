@@ -1,6 +1,4 @@
-import { revalidateTag } from "next/cache";
-import { json, parseIssue, readBody, withOwner } from "@/lib/api";
-import { POSTS_TAG } from "@/lib/content";
+import { json, parseIssue, readBody, refreshPosts, withOwner } from "@/lib/api";
 import { validateDraft } from "@/lib/editor/draft";
 import { deleteDraft, updatePost } from "@/lib/write";
 
@@ -16,7 +14,7 @@ export async function PATCH(req: Request, ctx: RouteContext<"/api/write/[issue]"
     if ("error" in result) return json({ error: "invalid", message: result.error }, 400);
     const post = await updatePost(session.token, number, result.draft, publishing ? "published" : undefined);
     // Draft autosaves arrive every few seconds and can't change the site.
-    if (post.status === "published") revalidateTag(POSTS_TAG, { expire: 0 });
+    if (post.status === "published") await refreshPosts(post, true);
     return json(post);
   });
 }

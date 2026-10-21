@@ -175,6 +175,47 @@ async function fetchIssuePosts(): Promise<Post[]> {
   return posts;
 }
 
+/**
+ * GitHub's label-filtered issue list trails a write by a few seconds. Revalidating
+ * inside that window rebuilds pages from the old list and caches them for
+ * REVALIDATE_SECONDS (a just-published post 404s for five minutes), so writes
+ * wait until the list agrees before revalidating.
+ *
+ * `listed`: the issue should be on the blog, at least as fresh as `updatedAt`;
+ * otherwise it should be gone. Resolves false on timeout; the revalidate timer
+ * catches up from there.
+ */
+export async function waitForListing(
+  issue: { number: number; updatedAt?: string },
+  listed: boolean,
+  { timeoutMs = 12_000, intervalMs = 800 } = {},
+): Promise<boolean> {
+  const params = new URLSearchParams({
+    state: "all",
+    labels: GH.publishedLabels.join(","),
+    per_page: "100",
+    // Just-written issues sort first, so one page is enough.
+    sort: "updated",
+    direction: "desc",
+  });
+  const url = `https://api.github.com/repos/${GH.owner}/${GH.repo}/issues?${params}`;
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    try {
+      const res = await fetch(url, { headers: githubHeaders(), cache: "no-store" });
+      if (res.ok) {
+        const found = ((await res.json()) as GitHubIssue[]).find((i) => i.number === issue.number);
+        const fresh = found && (!issue.updatedAt || found.updated_at >= issue.updatedAt);
+        if (listed ? fresh : !found) return true;
+      }
+    } catch {
+      // Network trouble: keep trying until the deadline.
+    }
+    if (Date.now() + intervalMs > deadline) return false;
+    await new Promise((r) => setTimeout(r, intervalMs));
+  }
+}
+
 async function readLocalPosts(): Promise<Post[]> {
   const dir = path.join(process.cwd(), "content", "blog");
   let files: string[] = [];
