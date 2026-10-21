@@ -8,10 +8,11 @@ import { authConfigured, getSession } from "@/lib/session";
 import { formatDate, relativeTime } from "@/lib/utils";
 import { isOwner, listDrafts, type DraftSummary } from "@/lib/write";
 import { WriteSignIn } from "@/components/write/WriteSignIn";
+import { DeleteDraftButton } from "@/components/write/DeleteDraftButton";
 
 export const metadata: Metadata = { title: "Drafts", robots: { index: false, follow: false } };
 
-function Row({ href, title, meta, external }: { href: string; title: string; meta: string; external?: string }) {
+function Row({ href, title, meta, external, action }: { href: string; title: string; meta: string; external?: string; action?: React.ReactNode }) {
   return (
     <li className="group flex items-baseline justify-between gap-4 py-3">
       <Link href={href} className="min-w-0 truncate text-fg group-hover:text-accent">
@@ -24,6 +25,7 @@ function Row({ href, title, meta, external }: { href: string; title: string; met
             <ArrowUpRight className="h-3.5 w-3.5" />
           </a>
         )}
+        {action}
       </span>
     </li>
   );
@@ -70,7 +72,14 @@ export default async function DraftsPage() {
         ) : drafts.length ? (
           <ul className="divide-y divide-line border-y border-line">
             {drafts.map((d) => (
-              <Row key={d.number} href={`/write/${d.number}`} title={d.title} meta={`#${d.number} · edited ${relativeTime(d.updated)}`} external={d.url} />
+              <Row
+                key={d.number}
+                href={`/write/${d.number}`}
+                title={d.title}
+                meta={`#${d.number} · edited ${relativeTime(d.updated)}`}
+                external={d.url}
+                action={<DeleteDraftButton number={d.number} title={d.title} />}
+              />
             ))}
           </ul>
         ) : (

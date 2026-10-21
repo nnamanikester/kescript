@@ -8,6 +8,8 @@ import { slugify } from "@/lib/utils";
 import type { PostDraft } from "@/lib/editor/draft";
 import { PostArt } from "@/components/ui/PostArt";
 import { useAutosize } from "./useAutosize";
+import { AiWand } from "./AiWand";
+import type { AiField } from "./ai";
 
 export type Meta = Omit<PostDraft, "body">;
 
@@ -19,6 +21,8 @@ interface Props {
   onChange: (patch: Partial<Meta>) => void;
   /** Enter in the title/subtitle moves into the body. */
   onEnterBody: () => void;
+  /** Present when AI is configured: fills a field from the post. */
+  onGenerate?: (field: AiField) => Promise<void>;
 }
 
 function TagInput({ tags, known, onChange }: { tags: string[]; known: string[]; onChange: (tags: string[]) => void }) {
@@ -76,7 +80,7 @@ function TagInput({ tags, known, onChange }: { tags: string[]; known: string[]; 
 }
 
 /** The post header, exactly as it renders — except every part of it is editable. */
-export function HeaderFields({ meta, slug, words, knownTags, onChange, onEnterBody }: Props) {
+export function HeaderFields({ meta, slug, words, knownTags, onChange, onEnterBody, onGenerate }: Props) {
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const subRef = useRef<HTMLTextAreaElement>(null);
   useAutosize(titleRef, meta.title);
@@ -115,6 +119,7 @@ export function HeaderFields({ meta, slug, words, knownTags, onChange, onEnterBo
         </label>
       </div>
 
+      <div className="mt-4 flex items-start gap-2">
       <textarea
         ref={titleRef}
         value={meta.title}
@@ -124,8 +129,10 @@ export function HeaderFields({ meta, slug, words, knownTags, onChange, onEnterBo
         aria-label="Title"
         rows={1}
         autoFocus={!meta.title}
-        className="mt-4 block w-full resize-none overflow-hidden bg-transparent text-balance text-[2.1rem] font-semibold leading-[1.12] tracking-[-0.035em] text-fg outline-none placeholder:text-faint/50 sm:text-[2.75rem]"
+        className="block w-full resize-none overflow-hidden bg-transparent text-balance text-[2.1rem] font-semibold leading-[1.12] tracking-[-0.035em] text-fg outline-none placeholder:text-faint/50 sm:text-[2.75rem]"
       />
+      {onGenerate && <AiWand label="Suggest a title from the post" onGenerate={() => onGenerate("title")} className="mt-1.5 sm:mt-3" />}
+      </div>
       <textarea
         ref={subRef}
         value={meta.subtitle}
@@ -155,8 +162,11 @@ export function HeaderFields({ meta, slug, words, knownTags, onChange, onEnterBo
         <span className="hidden sm:inline">{words.toLocaleString("en-US")} words</span>
       </div>
 
-      <div className="mt-4">
-        <TagInput tags={meta.tags} known={knownTags} onChange={(tags) => onChange({ tags })} />
+      <div className="mt-4 flex items-start gap-2">
+        <div className="min-w-0 flex-1">
+          <TagInput tags={meta.tags} known={knownTags} onChange={(tags) => onChange({ tags })} />
+        </div>
+        {onGenerate && <AiWand label="Suggest tags from the post" onGenerate={() => onGenerate("tags")} className="-mt-0.5 h-8 w-8" />}
       </div>
     </header>
   );

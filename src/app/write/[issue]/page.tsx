@@ -4,6 +4,7 @@ import { getTags } from "@/lib/content";
 import { GitHubError } from "@/lib/github";
 import { authConfigured, getSession } from "@/lib/session";
 import { getEditablePost, isOwner } from "@/lib/write";
+import { aiConfigured } from "@/lib/writer-ai";
 import { WriterLoader } from "@/components/write/WriterLoader";
 import { WriteSignIn } from "@/components/write/WriteSignIn";
 
@@ -27,5 +28,5 @@ export default async function EditPage(props: PageProps<"/write/[issue]">) {
     throw err;
   }
   const tags = (await getTags()).map((t) => t.tag);
-  return <WriterLoader issue={{ number: post.number, url: post.url, status: post.status }} initial={post.draft} knownTags={tags} />;
+  return <WriterLoader issue={{ number: post.number, url: post.url, status: post.status }} initial={post.draft} knownTags={tags} ai={aiConfigured()} />;
 }

@@ -8,6 +8,7 @@ import { CommandPalette } from "@/components/site/CommandPalette";
 import { Enhancers } from "@/components/site/Enhancers";
 import { SiteJsonLd } from "@/components/site/JsonLd";
 import { themeScript } from "@/components/site/theme";
+import { viewTransitionGuardScript } from "@/components/site/view-transitions";
 import { SITE } from "@/lib/site";
 import { FEEDS } from "@/lib/seo";
 import "./globals.css";
@@ -65,6 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${sans.variable} ${mono.variable} ${serif.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={{ __html: viewTransitionGuardScript }} />
       </head>
       <body className="relative isolate min-h-dvh font-sans antialiased">
         <div className="aurora" aria-hidden />

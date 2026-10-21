@@ -81,11 +81,34 @@ Go to **`/write`** (or click the pen in the header — only you see it). The edi
 - **Drafts autosave to GitHub** as an issue labelled `draft` (the site never shows it), as soon as the post has a title. Saves happen after a 4-second pause in typing, at most once every 15 seconds, and at least every 30 seconds while you type non-stop. That stays well inside GitHub's write limits and keeps the issue's edit history readable. ⌘S saves immediately. If GitHub can't be reached, the draft is kept in this browser and retried. The repo is public, so drafts are readable on GitHub. **`/write/drafts`** lists every `draft` issue and every published post.
 - **Live posts never autosave.** Edits stay on your screen (and in this browser) until you press **Update**, so half-finished changes never reach readers.
 - **Unpublish** (in Settings, on a live post) takes it off the site and turns it back into a draft. The issue, comments and reactions are kept.
+- **Delete a draft** from Settings, or with the trash icon on `/write/drafts`. The issue is deleted from GitHub for good. If your sign-in isn't allowed to delete issues (that needs repo admin), it's closed and its `draft` label removed instead, which takes it off your drafts. Live posts can't be deleted: unpublish first.
 - **Sign in / out** from the header. Readers use it to comment and react; you also get *Write a post* and *Drafts & posts* in its menu.
 
 **Publish** opens a new issue *as you* (or relabels the draft's issue) with `published`, with the frontmatter written for you, and refreshes the site immediately. On an existing post, the pen becomes **edit** next to the date. **Update** edits the same issue, and the URL is pinned so changing the title never breaks links. Anything you edit directly on GitHub still works; the editor reads it back.
 
 **Images** go to an `assets` branch of this repo (created on first upload, with deployments switched off for it) and are served from `raw.githubusercontent.com`. That needs **`GITHUB_TOKEN` with *Contents: Read and write*** on this repo: a fine-grained token with *Contents: Read and write* and *Issues: Read-only* is enough. The GitHub App deliberately doesn't get Contents access, so commenters are never asked to grant write access to code.
+
+**AI assists** appear once an AI key is set: `ANTHROPIC_API_KEY`, `GEMINI_API_KEY` (from [Google AI Studio](https://aistudio.google.com/apikey)), or `OPENAI_API_KEY`/`AI_BASE_URL` plus `AI_MODEL` for OpenAI or any server with a Responses API, including a local Ollama. `AI_MODEL` overrides the default model, and `AI_PROVIDER` picks one when several keys are set. The **wand** next to the title, the tags and the SEO description (in Settings) fills that field from the post. Click again for a different suggestion. **Select text → Ask AI** opens a prompt: type what you want ("make this friendlier", "turn into a list") or pick a quick action, then **Replace** (⌘↵), **Insert below**, **Try again**, or type a follow-up to refine the answer. ⌘Z undoes an applied change. Each request retrieves related passages from your published posts, so suggestions reuse your tags, match your titles, and can link to your other posts.
+
+It's built on **LangChain** and **LangGraph**, so the pieces are standard and reusable (`src/lib/rag`):
+
+- **`RAGBase`**: a LangGraph graph, `retrieve → generate → parse`, configured per task. `task.graph` is the compiled graph.
+- **Retrieval**: LangChain's `MarkdownTextSplitter` and `BM25Retriever` (wrapped as `KeywordRetriever` to make it case-insensitive). No vector database or embeddings needed, and any LangChain retriever plugs in instead, e.g. a vector store's `.asRetriever()`.
+- **Models**: `ChatAnthropic`, `ChatOpenAI` on the Responses API, and `ChatGeminiInteractions`, a small LangChain chat model for Gemini's Interactions API (LangChain's own Google package only supports `generateContent` so far). `chatModelFromEnv()` picks one from the env vars above.
+
+`src/lib/writer-ai.ts` builds the two writer tasks on it:
+
+```ts
+const task = new RAGBase<Input, Output>({
+  llm: chatModelFromEnv()!,                     // or any LangChain chat model
+  retriever: new KeywordRetriever({ docs: await splitMarkdown(docs) }),
+  instructions: "You are…",                     // string or (input) => string
+  query: (i) => i.text,                         // what to search for
+  prompt: (i, context) => `${context}\n\n${i.text}`,
+  parse: (text) => parseJSON<Output>(text),     // optional
+});
+const { output, sources } = await task.run(input);
+```
 
 Requires the GitHub App below. You must be signed in as an `approvedPosters` account (`src/lib/site.ts`). Everyone else gets a 404.
 

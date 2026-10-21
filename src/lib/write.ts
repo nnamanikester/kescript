@@ -209,6 +209,75 @@ export async function unpublishPost(token: string, number: number): Promise<Publ
   return result(issue, draftSlug(draftFromIssue(issue).draft));
 }
 
+/** "deleted": the issue is gone. "closed": GitHub wouldn't delete it, so it was closed and unlabelled instead. */
+export type DeleteOutcome = "deleted" | "closed";
+
+/**
+ * Ask GitHub to delete an issue for good. Only GraphQL can, and only for repo
+ * admins; anything short of a clean success returns GitHub's reason instead.
+ */
+async function tryDeleteIssue(token: string, nodeId: string): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const res = await fetch("https://api.github.com/graphql", {
+    method: "POST",
+    headers: { ...githubHeaders(token), "Content-Type": "application/json" },
+    body: JSON.stringify({
+      query: "mutation($id: ID!) { deleteIssue(input: { issueId: $id }) { clientMutationId } }",
+      variables: { id: nodeId },
+    }),
+    cache: "no-store",
+  });
+  if (res.status === 401) throw new GitHubError("GitHub: Bad credentials", 401);
+  const data = (await res.json().catch(() => null)) as {
+    data?: { deleteIssue?: unknown } | null;
+    errors?: { message?: string }[];
+    message?: string;
+  } | null;
+  if (!res.ok || !data) return { ok: false, reason: data?.message ?? `HTTP ${res.status}` };
+  if (data.errors?.length) return { ok: false, reason: data.errors.map((e) => e.message).join("; ") };
+  // `deleteIssue: null` without errors is not a success either.
+  if (!data.data?.deleteIssue) return { ok: false, reason: "no deleteIssue result" };
+  return { ok: true };
+}
+
+/** GitHub answers 404 or 410 for a deleted issue. */
+async function issueGone(token: string, number: number): Promise<boolean> {
+  try {
+    await rest(token, "GET", `/issues/${number}`);
+    return false;
+  } catch (err) {
+    if (err instanceof GitHubError && (err.status === 404 || err.status === 410)) return true;
+    throw err;
+  }
+}
+
+/**
+ * Delete a draft for good, or, when GitHub won't allow that, close it and
+ * drop the `draft` label so it leaves the drafts list. Live posts are refused:
+ * unpublishing first is the deliberate step. Each outcome is checked against
+ * GitHub before it's reported, and every step is logged.
+ */
+export async function deleteDraft(token: string, number: number): Promise<DeleteOutcome> {
+  const issue = (await readIssue(token, number)) as GitHubIssue & { node_id: string };
+  if (statusOf(issue) === "published") throw new GitHubError("This post is live. Unpublish it first, then delete the draft.", 409);
+
+  const attempt = await tryDeleteIssue(token, issue.node_id);
+  if (attempt.ok && (await issueGone(token, number))) {
+    console.info(`[delete] #${number}: deleted`);
+    return "deleted";
+  }
+  console.info(`[delete] #${number}: GitHub didn't delete it (${attempt.ok ? "still there after deleteIssue" : attempt.reason}); closing instead`);
+
+  const labels = labelNames(issue).filter((l) => l.toLowerCase() !== DRAFT_LABEL);
+  const closed = await rest<GitHubIssue>(token, "PATCH", `/issues/${number}`, { state: "closed", state_reason: "not_planned", labels });
+  const left = labelNames(closed);
+  if (left.some((l) => l.toLowerCase() === DRAFT_LABEL)) {
+    console.error(`[delete] #${number}: closed, but GitHub kept the draft label`, left);
+    throw new GitHubError("GitHub closed the issue but kept its draft label. Remove the label on GitHub.", 502);
+  }
+  console.info(`[delete] #${number}: closed and unlabelled (labels now: ${left.join(", ") || "none"})`);
+  return "closed";
+}
+
 /* ───────────────────────────────── images ───────────────────────────────── */
 
 export const IMAGE_TYPES: Record<string, string> = {

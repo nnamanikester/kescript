@@ -21,7 +21,8 @@ export function applyTheme(pref: ThemePref, origin?: { x: number; y: number }) {
   const root = document.documentElement;
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const doc = document as Document & { startViewTransition?: (cb: () => void) => { finished: Promise<void> } };
-  if (origin && doc.startViewTransition && !reduced) {
+  // A hidden tab can't animate; Chrome would reject the transition.
+  if (origin && doc.startViewTransition && !reduced && document.visibilityState === "visible") {
     const r = Math.hypot(Math.max(origin.x, innerWidth - origin.x), Math.max(origin.y, innerHeight - origin.y));
     root.style.setProperty("--reveal-x", `${origin.x}px`);
     root.style.setProperty("--reveal-y", `${origin.y}px`);

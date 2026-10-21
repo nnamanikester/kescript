@@ -918,8 +918,6 @@ html.theme-reveal::view-transition-new(root) {
  */
 .writer-prose {
   outline: none;
-  min-height: 45vh;
-  padding-bottom: 4rem;
 }
 /* TipTap wraps each custom block in div.react-renderer.node-<name>. */
 .writer-prose > .node-codeBlock,

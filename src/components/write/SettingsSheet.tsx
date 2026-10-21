@@ -7,6 +7,9 @@ import { SITE } from "@/lib/site";
 import { today } from "@/lib/editor/draft";
 import type { Meta } from "./HeaderFields";
 import { imageFiles, uploadImage } from "./upload";
+import { AiWand } from "./AiWand";
+import { DELETE_CONFIRM } from "./deleteDraft";
+import type { AiField } from "./ai";
 
 interface Props {
   open: boolean;
@@ -17,8 +20,10 @@ interface Props {
   issue: { number: number; url: string; status: "draft" | "published" } | null;
   busy: boolean;
   onUnpublish: () => void;
+  onDelete: () => void;
   onChange: (patch: Partial<Meta>) => void;
   onDiscard: () => void;
+  onGenerate?: (field: AiField) => Promise<void>;
 }
 
 function Field({ label, hint, children }: { label: string; hint?: React.ReactNode; children: React.ReactNode }) {
@@ -35,7 +40,7 @@ const input =
   "w-full rounded-lg border border-line bg-bg px-3 py-2 text-sm text-fg outline-none transition-colors placeholder:text-faint focus:border-line-strong";
 
 /** Everything a reader doesn't see on the page: URL, SEO, social card. */
-export function SettingsSheet({ open, onClose, meta, autoSlug, autoDescription, issue, busy, onUnpublish, onChange, onDiscard }: Props) {
+export function SettingsSheet({ open, onClose, meta, autoSlug, autoDescription, issue, busy, onUnpublish, onDelete, onChange, onDiscard, onGenerate }: Props) {
   const panel = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -112,13 +117,18 @@ export function SettingsSheet({ open, onClose, meta, autoSlug, autoDescription, 
               </>
             }
           >
+            <div className="relative">
             <textarea
               value={meta.description}
               onChange={(e) => onChange({ description: e.target.value.replace(/\n/g, " ") })}
               placeholder={autoDescription || "What will someone get from reading this?"}
               rows={3}
-              className={`${input} resize-none`}
+              className={`${input} resize-none ${onGenerate ? "pr-10" : ""}`}
             />
+            {onGenerate && (
+              <AiWand label="Write a description from the post" onGenerate={() => onGenerate("description")} className="absolute right-1 top-1" />
+            )}
+            </div>
           </Field>
 
           <Field label="Social image" hint="Shown when the post is shared. Leave empty for the generated card.">
@@ -195,6 +205,24 @@ export function SettingsSheet({ open, onClose, meta, autoSlug, autoDescription, 
                 className="mt-3 rounded-full border border-danger/40 px-3.5 py-1.5 text-xs text-danger transition-colors hover:bg-danger/10 disabled:opacity-50"
               >
                 Unpublish post
+              </button>
+            </div>
+          )}
+
+          {issue?.status === "draft" && (
+            <div className="rounded-xl border border-line p-4">
+              <p className="text-sm text-fg">Delete draft</p>
+              <p className="mt-1 text-xs leading-relaxed text-faint">
+                Removes issue #{issue.number} from GitHub for good. If GitHub won&apos;t allow deleting, it&apos;s closed and taken off your drafts
+                instead.
+              </p>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => confirm(DELETE_CONFIRM) && onDelete()}
+                className="mt-3 rounded-full border border-danger/40 px-3.5 py-1.5 text-xs text-danger transition-colors hover:bg-danger/10 disabled:opacity-50"
+              >
+                Delete draft
               </button>
             </div>
           )}

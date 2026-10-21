@@ -5,7 +5,8 @@ import type { Editor } from "@tiptap/core";
 import { NodeSelection } from "@tiptap/pm/state";
 import { useEditorState } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
-import { Bold, Code, Heading2, Heading3, Italic, Link2, Quote, Strikethrough, Unlink } from "lucide-react";
+import { Bold, Code, Heading2, Heading3, Italic, Link2, Quote, Strikethrough, Unlink, WandSparkles } from "lucide-react";
+import { AiPanel } from "./AiPanel";
 
 export const EDIT_LINK_EVENT = "ks-edit-link";
 
@@ -26,8 +27,9 @@ function Btn({ on, label, active, children }: { on: () => void; label: string; a
 }
 
 /** Formatting for the selected text. ⌘B / ⌘I / ⌘E / ⌘K all work without it too. */
-export function BubbleBar({ editor }: { editor: Editor }) {
+export function BubbleBar({ editor, ai }: { editor: Editor; ai?: { title: string; slug: string } }) {
   const [linking, setLinking] = useState(false);
+  const [asking, setAsking] = useState(false);
   const [href, setHref] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const s = useEditorState({
@@ -52,7 +54,10 @@ export function BubbleBar({ editor }: { editor: Editor }) {
       requestAnimationFrame(() => inputRef.current?.focus());
     };
     // Moving the cursor elsewhere abandons a half-typed link.
-    const reset = () => setLinking(false);
+    const reset = () => {
+      setLinking(false);
+      setAsking(false);
+    };
     window.addEventListener(EDIT_LINK_EVENT, open);
     editor.on("selectionUpdate", reset);
     return () => {
@@ -79,7 +84,9 @@ export function BubbleBar({ editor }: { editor: Editor }) {
       }}
     >
       <div className="flex items-center gap-0.5 rounded-xl border border-line bg-elev/95 p-1 shadow-card backdrop-blur-xl">
-        {linking ? (
+        {asking && ai ? (
+          <AiPanel editor={editor} title={ai.title} slug={ai.slug} onClose={() => (setAsking(false), editor.commands.focus())} />
+        ) : linking ? (
           <form
             className="flex items-center gap-1"
             onSubmit={(e) => {
@@ -108,6 +115,21 @@ export function BubbleBar({ editor }: { editor: Editor }) {
           </form>
         ) : (
           <>
+            {ai && (
+              <>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => setAsking(true)}
+                  title="Ask AI to change the selection"
+                  className="flex h-8 items-center gap-1.5 rounded-md px-2 text-sm text-accent transition-colors hover:bg-hover"
+                >
+                  <WandSparkles className="h-4 w-4" />
+                  <span className="hidden sm:inline">Ask AI</span>
+                </button>
+                <span className="mx-1 h-5 w-px bg-line" aria-hidden />
+              </>
+            )}
             <Btn label="Bold (⌘B)" active={s.bold} on={() => editor.chain().focus().toggleBold().run()}>
               <Bold className="h-4 w-4" />
             </Btn>

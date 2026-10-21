@@ -4,6 +4,7 @@ import { getTags } from "@/lib/content";
 import { emptyDraft } from "@/lib/editor/draft";
 import { authConfigured, getSession } from "@/lib/session";
 import { isOwner } from "@/lib/write";
+import { aiConfigured } from "@/lib/writer-ai";
 import { WriterLoader } from "@/components/write/WriterLoader";
 import { WriteSignIn } from "@/components/write/WriteSignIn";
 
@@ -14,5 +15,5 @@ export default async function WritePage() {
   if (!session) return <WriteSignIn returnTo="/write" configured={authConfigured()} />;
   if (!isOwner(session.login)) notFound();
   const tags = (await getTags()).map((t) => t.tag);
-  return <WriterLoader issue={null} initial={emptyDraft()} knownTags={tags} />;
+  return <WriterLoader issue={null} initial={emptyDraft()} knownTags={tags} ai={aiConfigured()} />;
 }

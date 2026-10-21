@@ -4,6 +4,7 @@ import "katex/dist/katex.min.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Extension } from "@tiptap/core";
 import { Slice } from "@tiptap/pm/model";
 import type { EditorView } from "@tiptap/pm/view";
@@ -40,11 +41,15 @@ import { HeaderFields, type Meta } from "./HeaderFields";
 import { SettingsSheet } from "./SettingsSheet";
 import { imageFiles, uploadImage } from "./upload";
 import { nextSaveAt } from "./autosave";
+import { deletedMessage, requestDeleteDraft } from "./deleteDraft";
+import { askAI, type AiField, type MetaSuggestion } from "./ai";
 
 export interface WriterProps {
   issue: IssueRef | null;
   initial: PostDraft;
   knownTags: string[];
+  /** AI assists are configured on the server. */
+  ai: boolean;
 }
 
 interface Stored {
@@ -156,6 +161,7 @@ export default function Writer({
   issue: initialIssue,
   initial,
   knownTags,
+  ai,
 }: WriterProps) {
   const [issue, setIssueState] = useState(initialIssue);
   // Timers outlive renders, so autosave reads the issue from a ref.
@@ -204,6 +210,9 @@ export default function Writer({
   const lastRemoteAt = useRef(0);
   const firstChangeAt = useRef<number | null>(null);
   const backoffUntil = useRef(0);
+  /** Set once the draft is deleted: nothing may save it back. */
+  const deleted = useRef(false);
+  const router = useRouter();
 
   const extensions = useMemo(
     () => [
@@ -233,6 +242,9 @@ export default function Writer({
     content: markdownToDoc(splitMeta(start)[1]),
     immediatelyRender: true,
     editorProps: {
+      // Keep the caret clear of the floating dock when typing near the bottom of the window.
+      scrollThreshold: { top: 80, right: 0, bottom: 120, left: 0 },
+      scrollMargin: { top: 80, right: 0, bottom: 120, left: 0 },
       attributes: {
         class: "prose writer-prose",
         "aria-label": "Post body",
@@ -326,6 +338,7 @@ export default function Writer({
     target: "draft" | "publish",
     auto = false,
   ): Promise<void> {
+    if (deleted.current) return;
     if (inFlight.current) {
       if (auto) again.current = true;
       return;
@@ -413,6 +426,7 @@ export default function Writer({
   }
 
   function scheduleRemote() {
+    if (deleted.current) return;
     // Live posts only change when you press Update: autosave never publishes.
     if (issueRef.current?.status === "published") return;
     if (!metaRef.current.title.trim()) return;
@@ -432,6 +446,7 @@ export default function Writer({
   }
 
   function schedule() {
+    if (deleted.current) return;
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(persist, 500);
     scheduleRemote();
@@ -444,9 +459,16 @@ export default function Writer({
     schedule();
   };
 
+  /** Fill one metadata field from the post. Undo is just editing the field. */
+  const generate = async (field: AiField) => {
+    const res = await askAI<MetaSuggestion>({ task: "meta", field, draft: currentDraft() });
+    if (res[field]) updateMeta({ [field]: res[field] });
+  };
+
   // ⌘S saves now; leaving the page sends whatever autosave hadn't yet.
   useEffect(() => {
     const flush = () => {
+      if (deleted.current) return;
       if (timer.current) persist();
       const current = issueRef.current;
       if (!current || current.status === "published" || !remoteTimer.current)
@@ -564,6 +586,28 @@ export default function Writer({
     }
   };
 
+  const deleteDraft = async () => {
+    if (!issue) return;
+    setBusy(true);
+    setProblem(null);
+    // Stop pending saves first, or autosave could write the draft back.
+    deleted.current = true;
+    if (timer.current) clearTimeout(timer.current);
+    if (remoteTimer.current) clearTimeout(remoteTimer.current);
+    timer.current = remoteTimer.current = null;
+    try {
+      const outcome = await requestDeleteDraft(issue.number);
+      clearStored(key);
+      toast(deletedMessage(outcome));
+      router.replace("/write/drafts");
+      router.refresh();
+    } catch (e) {
+      deleted.current = false;
+      setProblem({ text: (e as Error).message });
+      setBusy(false);
+    }
+  };
+
   const slug = draftSlug(meta);
   const autoDescription = settingsOpen
     ? toPlainText(bodyNow()).slice(0, 160)
@@ -595,7 +639,7 @@ export default function Writer({
           : "Drafts save to GitHub automatically as you write";
 
   return (
-    <div data-writer="" className="px-5 pb-40 sm:px-6">
+    <div data-writer="" className="px-5 pb-16 sm:px-6">
       {restorable && (
         <div className="measure mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-elev px-4 py-3 text-sm shadow-card">
           <span className="text-muted">
@@ -628,10 +672,20 @@ export default function Writer({
         knownTags={knownTags}
         onChange={updateMeta}
         onEnterBody={() => editor?.commands.focus("start")}
+        onGenerate={ai ? generate : undefined}
       />
 
       <div className={mode === "write" ? "" : "hidden"}>
         <EditorContent editor={editor} />
+        {/* The editor is only as tall as its text; clicking below it continues at the end. */}
+        <div
+          aria-hidden
+          onMouseDown={(e) => {
+            e.preventDefault();
+            editor?.chain().focus("end").run();
+          }}
+          className="measure h-20 cursor-text"
+        />
       </div>
       {mode === "preview" && (
         <div className="mx-auto">
@@ -646,7 +700,7 @@ export default function Writer({
         </div>
       )}
 
-      {editor && <BubbleBar editor={editor} />}
+      {editor && <BubbleBar editor={editor} ai={ai ? { title: meta.title, slug } : undefined} />}
       <SlashMenu />
 
       <SettingsSheet
@@ -658,7 +712,9 @@ export default function Writer({
         issue={issue}
         busy={busy}
         onUnpublish={() => void unpublish()}
+        onDelete={() => void deleteDraft()}
         onChange={updateMeta}
+        onGenerate={ai ? generate : undefined}
         onDiscard={() => {
           clearStored(key);
           loadDraft(
