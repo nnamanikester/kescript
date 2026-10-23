@@ -26,7 +26,7 @@ description: Shown in lists, search results and social cards.
 slug: ai-slack-assistant      # default: slugified title
 date: 2025-03-05              # default: when the issue was opened
 updated: 2025-04-01
-category: essay               # essay | tutorial | note | snippet
+category: Essay               # or a "category:Essay" label
 tags: [ai, rag, python]       # default: the issue's other labels
 image: https://…/cover.png    # default: a generated card
 canonical: https://…          # if it was published elsewhere first

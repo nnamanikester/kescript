@@ -36,16 +36,13 @@ export const GH = {
 
 export const GH_REPO_URL = `https://github.com/${GH.owner}/${GH.repo}`;
 
-/** Categories (swyxkit "singletons"). Unknown/absent category => "note". */
-export const CATEGORIES = ["essay", "tutorial", "note", "snippet"] as const;
-export type Category = (typeof CATEGORIES)[number];
-
-export const CATEGORY_LABEL: Record<Category, string> = {
-  essay: "Essays",
-  tutorial: "Tutorials",
-  note: "Notes",
-  snippet: "Snippets",
-};
+/**
+ * Categories are repo labels named `category:<Name>`, e.g. `category:Case Study`.
+ * Create the label on GitHub (or type a new name in the writer) and it exists.
+ * A post without one falls back to its frontmatter `category:`, then to this.
+ */
+export const CATEGORY_PREFIX = "category:";
+export const DEFAULT_CATEGORY = "Note";
 
 export const NAV = [
   { href: "/blog", label: "Writing" },

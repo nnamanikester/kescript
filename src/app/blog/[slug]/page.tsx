@@ -9,7 +9,7 @@ import { getPost, getPostMetas, getRelated, toMeta, type PostMeta } from "@/lib/
 import { processPost } from "@/lib/markdown/pipeline";
 import { FEEDS } from "@/lib/seo";
 import { getPublicThread } from "@/lib/github";
-import { CATEGORY_LABEL, SITE } from "@/lib/site";
+import { SITE } from "@/lib/site";
 import { formatDate } from "@/lib/utils";
 import { PostBody } from "@/components/post/PostBody";
 import { TableOfContents } from "@/components/post/TableOfContents";
@@ -52,7 +52,7 @@ export async function generateMetadata(props: PageProps<"/blog/[slug]">): Promis
       type: "article",
       siteName: SITE.name,
       locale: "en_US",
-      section: CATEGORY_LABEL[post.category],
+      section: post.categoryName,
       title: post.title,
       description: post.description,
       url: `/blog/${post.slug}`,
@@ -226,7 +226,7 @@ export default async function PostPage(props: PageProps<"/blog/[slug]">) {
                   <li key={p.slug}>
                     <Link href={`/blog/${p.slug}`} className="group flex items-baseline justify-between gap-4 py-3">
                       <span className="text-fg group-hover:text-accent">{p.title}</span>
-                      <span className="shrink-0 font-mono text-xs text-faint">{CATEGORY_LABEL[p.category].replace(/s$/, "").toLowerCase()}</span>
+                      <span className="shrink-0 font-mono text-xs text-faint">{p.categoryName.toLowerCase()}</span>
                     </Link>
                   </li>
                 ))}

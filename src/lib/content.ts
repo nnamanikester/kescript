@@ -14,7 +14,8 @@ import { cache } from "react";
 import fs from "node:fs/promises";
 import path from "node:path";
 import matter from "gray-matter";
-import { CATEGORIES, GH, type Category } from "@/lib/site";
+import { GH } from "@/lib/site";
+import { isCategoryLabel, resolveCategory, toCategoryName } from "@/lib/categories";
 import { readingTime, slugify } from "@/lib/utils";
 import { toPlainText } from "@/lib/content-text";
 
@@ -31,7 +32,10 @@ export interface PostMeta {
   /** YYYY-MM-DD */
   date: string;
   updated?: string;
-  category: Category;
+  /** Slug, for URLs and matching. */
+  category: string;
+  /** Display name, e.g. "Case Study". */
+  categoryName: string;
   tags: string[];
   image?: string;
   canonical?: string;
@@ -95,15 +99,11 @@ function toTags(value: unknown): string[] | undefined {
   return raw.map((t) => slugify(String(t).trim())).filter(Boolean);
 }
 
-function toCategory(value: unknown): Category {
-  const c = String(value ?? "").toLowerCase();
-  return (CATEGORIES as readonly string[]).includes(c) ? (c as Category) : "note";
-}
-
 /** Exported for tests. */
 export function parseIssue(issue: GitHubIssue): Post {
   const { data: fm, content } = matter(issue.body ?? "");
   const labels = issue.labels.map(labelName).filter(Boolean);
+  const categoryName = resolveCategory(issue.labels.map((l) => (typeof l === "string" ? l : (l.name ?? ""))), fm.category);
   const title = String(fm.title ?? issue.title).trim();
   const body = content.trim();
   const { minutes, words } = readingTime(body);
@@ -115,8 +115,9 @@ export function parseIssue(issue: GitHubIssue): Post {
     description: fm.description ? String(fm.description) : fm.excerpt ? String(fm.excerpt) : excerpt(body),
     date: toDay(fm.date) ?? issue.created_at.slice(0, 10),
     updated: toDay(fm.updated),
-    category: toCategory(fm.category),
-    tags: toTags(fm.tags) ?? labels.filter((l) => !SYSTEM_LABELS.has(l)).map((l) => slugify(l)),
+    category: slugify(categoryName),
+    categoryName,
+    tags: toTags(fm.tags) ?? labels.filter((l) => !SYSTEM_LABELS.has(l) && !isCategoryLabel(l)).map((l) => slugify(l)),
     image: fm.image ?? fm.cover_image ?? undefined,
     canonical: fm.canonical ?? undefined,
     featured: Boolean(fm.featured) || labels.includes("featured"),
@@ -281,6 +282,48 @@ export async function getTags(): Promise<{ tag: string; count: number }[]> {
     .map(([tag, count]) => ({ tag, count }))
     .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
 }
+
+export interface CategoryInfo {
+  slug: string;
+  name: string;
+  count: number;
+}
+
+/** Names from the repo's `category:*` labels, including ones no post uses yet. */
+async function fetchCategoryLabels(): Promise<string[]> {
+  let url: string | null = `https://api.github.com/repos/${GH.owner}/${GH.repo}/labels?per_page=100`;
+  const names: string[] = [];
+  for (let page = 0; url && page < 10; page++) {
+    const res: Response = await fetch(url, {
+      headers: githubHeaders(),
+      next: { revalidate: REVALIDATE_SECONDS, tags: [POSTS_TAG] },
+    });
+    if (!res.ok) throw new Error(`GitHub ${res.status} ${res.statusText}`);
+    for (const { name } of (await res.json()) as { name: string }[]) {
+      if (isCategoryLabel(name) && toCategoryName(name)) names.push(toCategoryName(name));
+    }
+    url = parseNextLink(res.headers.get("link"));
+  }
+  return names;
+}
+
+/** Every category: the repo's labels plus any a post names in frontmatter. Most used first. */
+export const getCategories = cache(async (): Promise<CategoryInfo[]> => {
+  let names: string[] = [];
+  try {
+    names = await fetchCategoryLabels();
+  } catch (err) {
+    console.warn(`[content] couldn't list category labels (${(err as Error).message})`);
+  }
+  const all = new Map<string, CategoryInfo>();
+  for (const name of names) all.set(slugify(name), { slug: slugify(name), name, count: 0 });
+  for (const p of await getPosts()) {
+    const c = all.get(p.category) ?? { slug: p.category, name: p.categoryName, count: 0 };
+    c.count++;
+    all.set(c.slug, c);
+  }
+  return [...all.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+});
 
 /** Featured first (in date order), then the rest. */
 export async function getFeatured(limit = 5): Promise<PostMeta[]> {

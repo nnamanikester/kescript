@@ -3,7 +3,8 @@
 import { useId, useRef, useState } from "react";
 import Image from "next/image";
 import { ChevronDown, X } from "lucide-react";
-import { CATEGORIES, SITE, type Category } from "@/lib/site";
+import { SITE } from "@/lib/site";
+import { toCategoryName } from "@/lib/categories";
 import { slugify } from "@/lib/utils";
 import type { PostDraft } from "@/lib/editor/draft";
 import { PostArt } from "@/components/ui/PostArt";
@@ -18,6 +19,8 @@ interface Props {
   slug: string;
   words: number;
   knownTags: string[];
+  /** Existing category names; typing any other name creates that category on save. */
+  knownCategories: string[];
   onChange: (patch: Partial<Meta>) => void;
   /** Enter in the title/subtitle moves into the body. */
   onEnterBody: () => void;
@@ -79,8 +82,77 @@ function TagInput({ tags, known, onChange }: { tags: string[]; known: string[]; 
   );
 }
 
+const NEW = "\u0000new";
+
+/**
+ * A dropdown of existing categories, plus "New category…", which swaps in a
+ * text field. The new name commits on Enter or blur, never per keystroke:
+ * autosave would otherwise create a label for every prefix typed.
+ */
+function CategoryPicker({ value, known, onChange }: { value: string; known: string[]; onChange: (name: string) => void }) {
+  const [adding, setAdding] = useState(false);
+  const [text, setText] = useState("");
+  // A draft can name a category that has no label yet; keep it selectable.
+  const options = known.some((k) => k === value) ? known : [value, ...known];
+
+  const commit = () => {
+    const name = toCategoryName(text);
+    // Typing an existing name reuses its spelling instead of making a near-duplicate.
+    const next = name && (known.find((k) => slugify(k) === slugify(name)) ?? name);
+    if (next && next !== value) onChange(next);
+    setAdding(false);
+  };
+
+  if (adding) {
+    return (
+      <label className="flex items-center">
+        <span className="sr-only">New category</span>
+        <input
+          autoFocus
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              commit();
+            } else if (e.key === "Escape") {
+              setAdding(false);
+            }
+          }}
+          onBlur={commit}
+          placeholder="new category"
+          className="min-w-[12ch] border-b border-dashed border-line-strong bg-transparent [field-sizing:content] text-fg outline-none placeholder:text-faint"
+        />
+      </label>
+    );
+  }
+
+  return (
+    <label className="relative flex items-center">
+      <span className="sr-only">Category</span>
+      <select
+        value={value}
+        onChange={(e) => {
+          if (e.target.value !== NEW) return onChange(e.target.value);
+          setText("");
+          setAdding(true);
+        }}
+        className="cursor-pointer appearance-none bg-transparent pr-4 [field-sizing:content] text-muted outline-none hover:text-fg"
+      >
+        {options.map((c) => (
+          <option key={c} value={c}>
+            {c.toLowerCase()}
+          </option>
+        ))}
+        <option value={NEW}>+ New category…</option>
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-0 h-3 w-3" aria-hidden />
+    </label>
+  );
+}
+
 /** The post header, exactly as it renders — except every part of it is editable. */
-export function HeaderFields({ meta, slug, words, knownTags, onChange, onEnterBody, onGenerate }: Props) {
+export function HeaderFields({ meta, slug, words, knownTags, knownCategories, onChange, onEnterBody, onGenerate }: Props) {
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const subRef = useRef<HTMLTextAreaElement>(null);
   useAutosize(titleRef, meta.title);
@@ -102,21 +174,7 @@ export function HeaderFields({ meta, slug, words, knownTags, onChange, onEnterBo
         <span>
           <span className="text-accent">~</span>/blog/
         </span>
-        <label className="relative flex items-center">
-          <span className="sr-only">Category</span>
-          <select
-            value={meta.category}
-            onChange={(e) => onChange({ category: e.target.value as Category })}
-            className="cursor-pointer appearance-none bg-transparent pr-4 [field-sizing:content] text-muted outline-none hover:text-fg"
-          >
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="pointer-events-none absolute right-0 h-3 w-3" aria-hidden />
-        </label>
+        <CategoryPicker value={meta.category} known={knownCategories} onChange={(category) => onChange({ category })} />
       </div>
 
       <div className="mt-4 flex items-start gap-2">

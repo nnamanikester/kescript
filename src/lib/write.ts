@@ -4,7 +4,8 @@
  * and the GitHub App can only touch the repos it is installed on.
  */
 import matter from "gray-matter";
-import { CATEGORIES, GH, type Category } from "@/lib/site";
+import { GH } from "@/lib/site";
+import { categoryLabel, isCategoryLabel, resolveCategory } from "@/lib/categories";
 import { getPosts, githubHeaders, type GitHubIssue } from "@/lib/content";
 import { GitHubError } from "@/lib/github";
 import { getSession, type Session } from "@/lib/session";
@@ -63,6 +64,8 @@ function str(v: unknown): string {
   return v == null ? "" : String(v);
 }
 
+const labelNames = (issue: GitHubIssue) => issue.labels.map((l) => (typeof l === "string" ? l : (l.name ?? ""))).filter(Boolean);
+
 export function draftFromIssue(issue: GitHubIssue): { draft: PostDraft; extra: Record<string, unknown> } {
   const { data, content } = matter(issue.body ?? "");
   const extra = Object.fromEntries(Object.entries(data).filter(([k]) => !KNOWN.includes(k)));
@@ -76,9 +79,7 @@ export function draftFromIssue(issue: GitHubIssue): { draft: PostDraft; extra: R
       description: str(data.description ?? data.excerpt),
       date: str(data.date).slice(0, 10) || issue.created_at.slice(0, 10),
       updated: str(data.updated).slice(0, 10),
-      category: (CATEGORIES as readonly string[]).includes(str(data.category).toLowerCase())
-        ? (str(data.category).toLowerCase() as Category)
-        : "note",
+      category: resolveCategory(labelNames(issue), data.category),
       tags: tags.map((t) => slugify(String(t).trim())).filter(Boolean),
       image: str(data.image ?? data.cover_image),
       canonical: str(data.canonical),
@@ -92,18 +93,25 @@ export function draftFromIssue(issue: GitHubIssue): { draft: PostDraft; extra: R
 
 export const DRAFT_LABEL = "draft";
 
-const labelNames = (issue: GitHubIssue) => issue.labels.map((l) => (typeof l === "string" ? l : (l.name ?? ""))).filter(Boolean);
 const isPublishedLabel = (name: string) => (GH.publishedLabels as readonly string[]).some((l) => l.toLowerCase() === name.toLowerCase());
 
 export function statusOf(issue: GitHubIssue): PostStatus {
   return labelNames(issue).some(isPublishedLabel) ? "published" : "draft";
 }
 
-/** Swap the publish/draft label and keep every other label the issue has. */
-function labelsFor(issue: GitHubIssue, status: PostStatus): string[] {
-  const rest = labelNames(issue).filter((l) => !isPublishedLabel(l) && l.toLowerCase() !== DRAFT_LABEL);
-  return [...rest, status === "published" ? GH.publishedLabels[0] : DRAFT_LABEL];
+/**
+ * Swap the publish/draft label (and the category label, when `category` is
+ * given) and keep every other label the issue has.
+ */
+function labelsFor(issue: GitHubIssue, status: PostStatus, category?: string): string[] {
+  const rest = labelNames(issue).filter(
+    (l) => !isPublishedLabel(l) && l.toLowerCase() !== DRAFT_LABEL && !(category && isCategoryLabel(l)),
+  );
+  return [...rest, status === "published" ? GH.publishedLabels[0] : DRAFT_LABEL, ...(category ? [categoryLabel(category)] : [])];
 }
+
+/** GitHub matches label names case-insensitively. */
+const hasLabel = (issue: GitHubIssue, name: string) => labelNames(issue).some((l) => l.toLowerCase() === name.toLowerCase());
 
 async function readIssue(token: string, number: number): Promise<GitHubIssue> {
   const issue = await rest<GitHubIssue>(token, "GET", `/issues/${number}`);
@@ -154,7 +162,8 @@ async function ensureLabel(token: string, name: string) {
     await rest(token, "GET", `/labels/${encodeURIComponent(name)}`);
   } catch (err) {
     if (!(err instanceof GitHubError) || err.status !== 404) throw err;
-    const style = LABEL_STYLE[name] ?? { color: "c2410c", description: "Shown on the blog" };
+    const style =
+      LABEL_STYLE[name] ?? (isCategoryLabel(name) ? { color: "1d76db", description: "Blog category" } : { color: "c2410c", description: "Shown on the blog" });
     await rest(token, "POST", "/labels", { name, ...style });
   }
 }
@@ -182,7 +191,12 @@ export async function createPost(token: string, draft: PostDraft, status: PostSt
   if (status === "published") await assertSlugFree(slug);
   const label = status === "published" ? GH.publishedLabels[0] : DRAFT_LABEL;
   await ensureLabel(token, label);
-  const issue = await rest<GitHubIssue>(token, "POST", "/issues", { title: draft.title, body: issueBody(draft), labels: [label] });
+  await ensureLabel(token, categoryLabel(draft.category));
+  const issue = await rest<GitHubIssue>(token, "POST", "/issues", {
+    title: draft.title,
+    body: issueBody(draft),
+    labels: [label, categoryLabel(draft.category)],
+  });
   return result(issue, slug);
 }
 
@@ -197,10 +211,12 @@ export async function updatePost(token: string, number: number, draft: PostDraft
     await assertSlugFree(slug, number);
   }
   const patch: Record<string, unknown> = { title: draft.title, body: issueBody(draft, draftFromIssue(current).extra) };
-  if (next !== statusOf(current)) {
-    await ensureLabel(token, next === "published" ? GH.publishedLabels[0] : DRAFT_LABEL);
-    patch.labels = labelsFor(current, next);
-  }
+  const statusChanged = next !== statusOf(current);
+  const categoryChanged = !hasLabel(current, categoryLabel(draft.category));
+  if (statusChanged) await ensureLabel(token, next === "published" ? GH.publishedLabels[0] : DRAFT_LABEL);
+  // A name nobody has used yet becomes a new category here.
+  if (categoryChanged) await ensureLabel(token, categoryLabel(draft.category));
+  if (statusChanged || categoryChanged) patch.labels = labelsFor(current, next, draft.category);
   return result(await rest<GitHubIssue>(token, "PATCH", `/issues/${number}`, patch), slug);
 }
 

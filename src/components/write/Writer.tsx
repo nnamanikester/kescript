@@ -48,6 +48,7 @@ export interface WriterProps {
   issue: IssueRef | null;
   initial: PostDraft;
   knownTags: string[];
+  knownCategories: string[];
   /** AI assists are configured on the server. */
   ai: boolean;
 }
@@ -161,6 +162,7 @@ export default function Writer({
   issue: initialIssue,
   initial,
   knownTags,
+  knownCategories,
   ai,
 }: WriterProps) {
   const [issue, setIssueState] = useState(initialIssue);
@@ -673,6 +675,7 @@ export default function Writer({
         slug={slug}
         words={words}
         knownTags={knownTags}
+        knownCategories={knownCategories}
         onChange={updateMeta}
         onEnterBody={() => editor?.commands.focus("start")}
         onGenerate={ai ? generate : undefined}

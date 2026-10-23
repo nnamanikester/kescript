@@ -5,7 +5,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import uFuzzy from "@leeoniya/ufuzzy";
 import { Search, X } from "lucide-react";
 import type { SearchDoc } from "@/lib/content";
-import { CATEGORIES, CATEGORY_LABEL, type Category } from "@/lib/site";
 import { PostArchive, PostRow } from "./PostRow";
 
 const uf = new uFuzzy({ intraMode: 1, intraIns: 1 });
@@ -59,7 +58,7 @@ export function BlogIndex({ docs, featured }: { docs: SearchDoc[]; featured?: Re
 
   const [query, setQuery] = useState(params.get("q") ?? "");
   const categoryParam = params.get("category") ?? "";
-  const categories = useMemo(() => categoryParam.split(",").filter(Boolean) as Category[], [categoryParam]);
+  const categories = useMemo(() => categoryParam.split(",").filter(Boolean), [categoryParam]);
   const tag = params.get("tag");
   const [limit, setLimit] = useState(PAGE);
 
@@ -97,7 +96,7 @@ export function BlogIndex({ docs, featured }: { docs: SearchDoc[]; featured?: Re
     router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
   };
 
-  const toggleCategory = (c: Category) => {
+  const toggleCategory = (c: string) => {
     const set = new Set(categories);
     if (set.has(c)) set.delete(c);
     else set.add(c);
@@ -127,9 +126,9 @@ export function BlogIndex({ docs, featured }: { docs: SearchDoc[]; featured?: Re
   }, [query, filtered]);
 
   const counts = useMemo(() => {
-    const m = new Map<Category, number>();
-    for (const d of docs) m.set(d.category, (m.get(d.category) ?? 0) + 1);
-    return m;
+    const m = new Map<string, { name: string; count: number }>();
+    for (const d of docs) m.set(d.category, { name: d.categoryName, count: (m.get(d.category)?.count ?? 0) + 1 });
+    return [...m].sort(([, a], [, b]) => b.count - a.count || a.name.localeCompare(b.name));
   }, [docs]);
 
   const filtering = Boolean(query.trim() || categories.length || tag);
@@ -165,7 +164,7 @@ export function BlogIndex({ docs, featured }: { docs: SearchDoc[]; featured?: Re
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Filter by category">
-        {CATEGORIES.filter((c) => counts.get(c)).map((c) => {
+        {counts.map(([c, { name, count }]) => {
           const on = categories.includes(c);
           return (
             <button
@@ -177,8 +176,8 @@ export function BlogIndex({ docs, featured }: { docs: SearchDoc[]; featured?: Re
                 on ? "border-accent/50 bg-accent-soft text-fg" : "border-line text-muted hover:border-line-strong hover:text-fg"
               }`}
             >
-              {CATEGORY_LABEL[c]}
-              <span className="font-mono text-[0.7rem] text-faint">{counts.get(c)}</span>
+              {name}
+              <span className="font-mono text-[0.7rem] text-faint">{count}</span>
             </button>
           );
         })}

@@ -101,7 +101,7 @@ export default async function Home() {
                   </ViewTransition>
                   <div className="flex flex-1 flex-col p-5">
                     <span className="font-mono text-[0.7rem] text-faint">
-                      <span className="text-accent">{String(i + 1).padStart(2, "0")}</span> · {p.category} · {p.readingMinutes} min
+                      <span className="text-accent">{String(i + 1).padStart(2, "0")}</span> · {p.categoryName.toLowerCase()} · {p.readingMinutes} min
                     </span>
                     <span className="mt-2.5 text-[1.1rem] font-medium leading-snug tracking-tight text-fg">{p.title}</span>
                     <span className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted">{p.description}</span>

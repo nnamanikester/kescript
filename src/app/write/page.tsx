@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTags } from "@/lib/content";
+import { getCategories, getTags } from "@/lib/content";
 import { emptyDraft } from "@/lib/editor/draft";
 import { authConfigured, getSession } from "@/lib/session";
 import { isOwner } from "@/lib/write";
@@ -14,6 +14,14 @@ export default async function WritePage() {
   const session = await getSession();
   if (!session) return <WriteSignIn returnTo="/write" configured={authConfigured()} />;
   if (!isOwner(session.login)) notFound();
-  const tags = (await getTags()).map((t) => t.tag);
-  return <WriterLoader issue={null} initial={emptyDraft()} knownTags={tags} ai={aiConfigured()} />;
+  const [tags, categories] = await Promise.all([getTags(), getCategories()]);
+  return (
+    <WriterLoader
+      issue={null}
+      initial={emptyDraft()}
+      knownTags={tags.map((t) => t.tag)}
+      knownCategories={categories.map((c) => c.name)}
+      ai={aiConfigured()}
+    />
+  );
 }

@@ -1,5 +1,6 @@
 /** What the writer edits. Client-safe: no Node APIs, no secrets. */
-import { CATEGORIES, type Category } from "@/lib/site";
+import { toCategoryName } from "@/lib/categories";
+import { DEFAULT_CATEGORY } from "@/lib/site";
 import { slugify } from "@/lib/utils";
 
 /** On GitHub: a `published` issue is on the blog; a `draft` issue isn't. */
@@ -14,7 +15,8 @@ export interface PostDraft {
   date: string;
   /** YYYY-MM-DD or empty */
   updated: string;
-  category: Category;
+  /** Display name; the post gets the matching `category:<Name>` label. */
+  category: string;
   tags: string[];
   /** Social card image URL; empty means the generated card. */
   image: string;
@@ -38,7 +40,7 @@ export function emptyDraft(): PostDraft {
     description: "",
     date: today(),
     updated: "",
-    category: "essay",
+    category: "Essay",
     tags: [],
     image: "",
     canonical: "",
@@ -69,7 +71,7 @@ export function validateDraft(input: unknown, { publishing = true } = {}): { dra
     description: str("description", 500),
     date: str("date", 10),
     updated: str("updated", 10),
-    category: (CATEGORIES as readonly string[]).includes(str("category", 20)) ? (str("category", 20) as Category) : "note",
+    category: toCategoryName(str("category", 100)) || DEFAULT_CATEGORY,
     tags: Array.isArray(d.tags) ? [...new Set(d.tags.map((t) => slugify(String(t))).filter(Boolean))].slice(0, 12) : [],
     image: str("image", 2000),
     canonical: str("canonical", 2000),

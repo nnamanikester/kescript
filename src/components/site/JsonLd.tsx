@@ -195,7 +195,7 @@ export function ArticleJsonLd({ post, image }: { post: PostMeta; image: string }
             wordCount: post.words,
             timeRequired: `PT${post.readingMinutes}M`,
             keywords: post.tags.join(", "),
-            articleSection: post.category,
+            articleSection: post.categoryName,
             inLanguage: "en",
             author: { "@id": PERSON_ID, name: SITE.author, url: `${SITE.url}/about` },
             publisher: { "@id": PERSON_ID },

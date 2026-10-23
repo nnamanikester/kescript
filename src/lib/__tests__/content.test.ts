@@ -47,8 +47,15 @@ describe("parseIssue", () => {
     expect(p.body).toBe("Body text here.");
   });
 
-  it("falls back to 'note' for unknown categories", () => {
-    expect(parseIssue(issue({ body: "---\ncategory: rant\n---\nx" })).category).toBe("note");
+  it("takes any frontmatter category, title-cased", () => {
+    expect(parseIssue(issue({ body: "---\ncategory: case-study\n---\nx" }))).toMatchObject({ category: "case-study", categoryName: "Case Study" });
+  });
+
+  it("prefers the category: label over frontmatter, and keeps it out of tags", () => {
+    const p = parseIssue(
+      issue({ body: "---\ncategory: essay\n---\nx", labels: [{ name: "published" }, { name: "category:Deep Dive" }, { name: "AI" }] }),
+    );
+    expect(p).toMatchObject({ category: "deep-dive", categoryName: "Deep Dive", tags: ["ai"] });
   });
 });
 

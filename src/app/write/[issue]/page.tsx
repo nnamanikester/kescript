@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTags } from "@/lib/content";
+import { getCategories, getTags } from "@/lib/content";
 import { GitHubError } from "@/lib/github";
 import { authConfigured, getSession } from "@/lib/session";
 import { getEditablePost, isOwner } from "@/lib/write";
@@ -27,6 +27,14 @@ export default async function EditPage(props: PageProps<"/write/[issue]">) {
     if (err instanceof GitHubError && err.status === 404) notFound();
     throw err;
   }
-  const tags = (await getTags()).map((t) => t.tag);
-  return <WriterLoader issue={{ number: post.number, url: post.url, status: post.status }} initial={post.draft} knownTags={tags} ai={aiConfigured()} />;
+  const [tags, categories] = await Promise.all([getTags(), getCategories()]);
+  return (
+    <WriterLoader
+      issue={{ number: post.number, url: post.url, status: post.status }}
+      initial={post.draft}
+      knownTags={tags.map((t) => t.tag)}
+      knownCategories={categories.map((c) => c.name)}
+      ai={aiConfigured()}
+    />
+  );
 }

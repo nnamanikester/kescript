@@ -21,7 +21,7 @@ describe("writer frontmatter", () => {
     title: "Hello world",
     subtitle: "Why it matters",
     date: "2026-10-20",
-    category: "tutorial" as const,
+    category: "Tutorial",
     tags: ["react-native", "ai"],
     featured: true,
     body: "Some **text**.\n\n```ts\nconst a = 1\n```",
@@ -58,7 +58,8 @@ describe("writer frontmatter", () => {
     expect(validateDraft({ ...draft, title: " " })).toEqual({ error: "Give the post a title" });
     expect(validateDraft({ ...draft, body: "" })).toEqual({ error: "The post is empty" });
     expect(validateDraft({ ...draft, image: "javascript:alert(1)" })).toHaveProperty("error");
-    expect(validateDraft({ ...draft, category: "nope" })).toMatchObject({ draft: { category: "note" } });
+    expect(validateDraft({ ...draft, category: " " })).toMatchObject({ draft: { category: "Note" } });
+    expect(validateDraft({ ...draft, category: "case study, part 2" })).toMatchObject({ draft: { category: "Case Study Part 2" } });
   });
 });
 

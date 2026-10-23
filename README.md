@@ -36,13 +36,17 @@ description: Shown in lists, search results and social cards.
 slug: ai-slack-assistant # default: slugified title — don't change after publishing
 date: 2025-03-05 # default: when the issue was opened
 updated: 2025-04-01
-category: essay # essay | tutorial | note | snippet (default: note)
+category: Essay # any name; a "category:<Name>" label wins (default: Note)
 tags: [ai, rag, python] # default: the issue's labels
 image: https://…/cover.png # default: generated OG card
 canonical: https://… # if it was published elsewhere first
 featured: true
 ---
 ```
+
+### Categories
+
+A category is a repo label named `category:<Name>`, e.g. `category:Case Study`. To create one, add the label on GitHub (Issues → Labels → New label) or with `gh label create "category:Case Study"`. You can also type a new name into the `~/blog/…` field in the writer, which creates the label when it saves. A post's `category:` label wins over frontmatter. A post with neither is a `Note`. The writer suggests every category label, including ones no post uses yet. The `/blog` filters only show categories that have posts.
 
 ### What markdown can do
 

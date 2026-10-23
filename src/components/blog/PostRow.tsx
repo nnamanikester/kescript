@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { PostMeta } from "@/lib/content";
-import { CATEGORY_LABEL } from "@/lib/site";
 
 /** One line per post: date, title, category. Scannable like a changelog. */
 export function PostRow({ post, snippet, showYear = false }: { post: PostMeta; snippet?: ReactNode; showYear?: boolean }) {
@@ -19,7 +18,7 @@ export function PostRow({ post, snippet, showYear = false }: { post: PostMeta; s
           {snippet && <span className="mt-1 block text-sm leading-relaxed text-faint">{snippet}</span>}
         </span>
         <span className="hidden font-mono text-[0.72rem] text-faint sm:block">
-          {CATEGORY_LABEL[post.category].replace(/s$/, "").toLowerCase()}
+          {post.categoryName.toLowerCase()}
         </span>
       </Link>
     </li>
