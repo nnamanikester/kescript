@@ -1,93 +1,106 @@
 import { describe, expect, it, vi } from "vitest";
 import type { GoogleGenAI } from "@google/genai";
 import { ChatAnthropic } from "@langchain/anthropic";
-import { Document } from "@langchain/core/documents";
 import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
-import { ChatGeminiInteractions, KeywordRetriever, LLMError, RAGBase, chatModelFromEnv, parseJSON, splitMarkdown, unfence } from "..";
+import { GeminiChatModel, KeywordSearch, LLMError, RAGBase, createChatModel, keywords, parseJSON, unfence, type Passage } from "..";
 import { RecordingChatModel } from "./fake-model";
 
-const docs = [
-  new Document({ pageContent: "Profiling React Native on low-end Android.\n\nThe JS thread was blocked by a huge FlatList render.", metadata: { id: "rn-perf" } }),
-  new Document({ pageContent: "Morning habits that stuck.\n\nWriting before email changed how my days went.", metadata: { id: "habits" } }),
-  new Document({ pageContent: "Retrieval for a Slack assistant.\n\nChunking, BM25 and embeddings over a codebase.", metadata: { id: "rag" } }),
+const posts = [
+  { text: "Profiling React Native on low-end Android.\n\nThe JS thread was blocked by a huge FlatList render.", meta: { id: "rn-perf" } },
+  { text: "Morning habits that stuck.\n\nWriting before email changed how my days went.", meta: { id: "habits" } },
+  { text: "Retrieval for a Slack assistant.\n\nChunking, BM25 and embeddings over a codebase.", meta: { id: "rag" } },
 ];
+type Meta = { id: string };
 
-describe("splitMarkdown", () => {
-  it("splits on markdown structure and cleans each chunk", async () => {
+describe("KeywordSearch", () => {
+  it("splits markdown into cleaned passages that remember their source", async () => {
     const text = Array.from({ length: 6 }, (_, i) => `## Part ${i}\n\n**Bold** ${"word ".repeat(30)}`).join("\n\n");
-    const chunks = await splitMarkdown([new Document({ pageContent: text, metadata: { id: "d" } })], {
+    const search = await KeywordSearch.fromMarkdown([{ text, meta: { id: "d" } }], {
       chunkSize: 250,
       chunkOverlap: 0,
       clean: (t) => t.replace(/\*\*/g, ""),
     });
-    expect(chunks.length).toBeGreaterThan(1);
-    expect(chunks.every((c) => c.pageContent.length <= 250 && !c.pageContent.includes("**"))).toBe(true);
-    expect(chunks.every((c) => c.metadata.id === "d")).toBe(true);
+    const found = await search.find("bold word part");
+    expect(found.length).toBeGreaterThan(1);
+    expect(found.every((p) => p.text.length <= 250 && !p.text.includes("**") && p.meta.id === "d")).toBe(true);
+  });
+
+  it("ranks the matching passage first, ignoring case", async () => {
+    const [top] = await new KeywordSearch(posts).find("why is my flatlist slow on android");
+    expect(top.meta.id).toBe("rn-perf");
+    expect(top.text).toContain("FlatList");
+    expect(top.score).toBeGreaterThan(0);
+  });
+
+  it("finds nothing for unrelated or stopword-only queries, or with no texts", async () => {
+    const search = new KeywordSearch(posts);
+    expect(await search.find("zebra quantum")).toEqual([]);
+    expect(await search.find("the and with")).toEqual([]);
+    expect(await new KeywordSearch([]).find("flatlist")).toEqual([]);
+    expect(keywords("The FlatList, the flatlist and a JS thread")).toEqual(["flatlist", "thread"]);
   });
 });
 
-describe("KeywordRetriever", () => {
-  const retriever = new KeywordRetriever({ docs, k: 3 });
+/** The smallest RAGBase task: title a post about a topic, using related posts. */
+class TopicTitler extends RAGBase<{ topic: string }, { title: string }, Meta> {
+  protected instructions(input: { topic: string }) {
+    return `Title a post about ${input.topic}. Keep {curly} text literal.`;
+  }
+  protected searchQuery(input: { topic: string }) {
+    return input.topic;
+  }
+  protected pickSources(found: Passage<Meta>[]) {
+    return found.filter((p) => p.meta.id !== "habits").slice(0, 1);
+  }
+  protected prompt(input: { topic: string }, sources: Passage<Meta>[]) {
+    return `CONTEXT:\n${sources.map((s) => s.text).join("\n")}\n\nTOPIC: ${input.topic}`;
+  }
+  protected parse(reply: string) {
+    return parseJSON<{ title: string }>(reply);
+  }
+}
 
-  it("ranks the matching document first, ignoring case", async () => {
-    const [top] = await retriever.invoke("why is my flatlist slow on android");
-    expect(top.metadata.id).toBe("rn-perf");
-    expect(top.pageContent).toContain("FlatList");
-    expect(top.metadata.score).toBeGreaterThan(0);
-  });
-
-  it("returns nothing for unrelated or stopword-only queries", async () => {
-    expect(await retriever.invoke("zebra quantum")).toEqual([]);
-    expect(await retriever.invoke("the and with")).toEqual([]);
-  });
-});
+/** A task with a rule: answer in one word. No search. */
+class OneWord extends RAGBase<string, string> {
+  constructor(llm: RecordingChatModel, attempts?: number) {
+    super(llm);
+    if (attempts) this.maxAttempts = attempts;
+  }
+  protected instructions() {
+    return "Reply with one word.";
+  }
+  protected prompt(input: string) {
+    return input;
+  }
+  protected parse(reply: string) {
+    return reply.trim();
+  }
+  protected findProblem(output: string) {
+    return output.includes(" ") ? "Use exactly one word." : null;
+  }
+}
 
 describe("RAGBase", () => {
-  it("runs retrieve → generate → parse", async () => {
+  it("searches, asks the model with the passages, and parses the reply", async () => {
     const llm = new RecordingChatModel('Sure! {"title": "Hello {braces} ok"}');
-    const task = new RAGBase<{ topic: string }, { title: string }>({
-      llm,
-      retriever: new KeywordRetriever({ docs, k: 3 }),
-      topK: 1,
-      instructions: (i) => `Title a post about ${i.topic}. Keep {curly} text literal.`,
-      query: (i) => i.topic,
-      prompt: (i, context) => `CONTEXT:\n${context}\n\nTOPIC: ${i.topic}`,
-      parse: (text) => parseJSON(text),
-    });
-    const { output, sources } = await task.run({ topic: "chunking embeddings" });
+    const { output, sources } = await new TopicTitler(llm, new KeywordSearch(posts)).run({ topic: "chunking embeddings" });
     expect(output).toEqual({ title: "Hello {braces} ok" });
-    expect(sources.map((s) => s.metadata.id)).toEqual(["rag"]);
+    expect(sources.map((s) => s.meta.id)).toEqual(["rag"]);
     expect(llm.sent().system).toBe("Title a post about chunking embeddings. Keep {curly} text literal.");
     expect(llm.sent().user).toContain("Chunking, BM25");
   });
 
-  it("filters hits, works without a retriever, and exposes the graph", async () => {
-    const llm = new RecordingChatModel("  done  ");
-    const base = new RAGBase<string>({ llm, instructions: "x", prompt: (i, c) => `${c}|${i}` });
-    expect((await base.run("hi")).output).toBe("done");
-    expect(llm.sent().user).toBe("|hi");
-
-    const filtered = base.with({ retriever: new KeywordRetriever({ docs, k: 3 }), filter: (d) => d.filter((x) => x.metadata.id !== "habits") });
-    expect((await filtered.run("habits email")).sources).toEqual([]);
-    expect(Object.keys(base.graph.getGraph().nodes)).toEqual(expect.arrayContaining(["retrieve", "generate", "parse", "check"]));
+  it("lets pickSources drop passages, and works without a search", async () => {
+    const llm = new RecordingChatModel('{"title": "x"}');
+    expect((await new TopicTitler(llm, new KeywordSearch(posts)).run({ topic: "habits email" })).sources).toEqual([]);
+    const { sources } = await new TopicTitler(llm).run({ topic: "chunking" });
+    expect(sources).toEqual([]);
   });
-});
 
-describe("RAGBase validate loop", () => {
-  const task = (llm: RecordingChatModel, maxAttempts?: number) =>
-    new RAGBase<string>({
-      llm,
-      instructions: "Reply with one word.",
-      prompt: (i) => i,
-      validate: (out) => (out.includes(" ") ? "Use exactly one word." : null),
-      maxAttempts,
-    });
-
-  it("sends a broken answer back with the reason, then accepts the fix", async () => {
+  it("sends a reply that breaks a rule back with the reason, then accepts the fix", async () => {
     const llm = new RecordingChatModel(["two words", "one"]);
-    const result = await task(llm).run("go");
-    expect(result).toMatchObject({ output: "one", attempts: 2, problem: null });
+    expect(await new OneWord(llm).run("go")).toMatchObject({ output: "one", attempts: 2, problem: null });
     const retry = llm.calls[1];
     expect(retry.map((m) => m.type)).toEqual(["system", "human", "ai", "human"]);
     expect(retry[2].text).toBe("two words");
@@ -96,14 +109,13 @@ describe("RAGBase validate loop", () => {
 
   it("stops after maxAttempts and reports what's still wrong", async () => {
     const llm = new RecordingChatModel(["still two", "and again", "never"]);
-    const result = await task(llm, 2).run("go");
-    expect(result).toMatchObject({ output: "and again", attempts: 2, problem: "Use exactly one word." });
+    expect(await new OneWord(llm, 2).run("go")).toMatchObject({ output: "and again", attempts: 2, problem: "Use exactly one word." });
     expect(llm.calls).toHaveLength(2);
   });
 
-  it("makes one call when the first answer passes", async () => {
+  it("asks once when the first reply passes", async () => {
     const llm = new RecordingChatModel("fine");
-    expect(await task(llm).run("go")).toMatchObject({ output: "fine", attempts: 1 });
+    expect(await new OneWord(llm).run("go")).toMatchObject({ output: "fine", attempts: 1 });
   });
 });
 
@@ -120,24 +132,24 @@ describe("helpers", () => {
   });
 });
 
-describe("chatModelFromEnv", () => {
+describe("createChatModel", () => {
   it("picks a provider", () => {
-    expect(chatModelFromEnv({})).toBeNull();
-    const anthropic = chatModelFromEnv({ ANTHROPIC_API_KEY: "k" });
+    expect(createChatModel({})).toBeNull();
+    const anthropic = createChatModel({ ANTHROPIC_API_KEY: "k" });
     expect(anthropic).toBeInstanceOf(ChatAnthropic);
     expect((anthropic as ChatAnthropic).model).toBe("claude-sonnet-5-5");
-    expect(chatModelFromEnv({ GEMINI_API_KEY: "g" })).toBeInstanceOf(ChatGeminiInteractions);
-    expect((chatModelFromEnv({ GOOGLE_API_KEY: "g", AI_MODEL: "gemini-4-argon" }) as ChatGeminiInteractions).model).toBe("gemini-4-argon");
-    expect(chatModelFromEnv({ ANTHROPIC_API_KEY: "a", GEMINI_API_KEY: "g", AI_PROVIDER: "gemini" })).toBeInstanceOf(ChatGeminiInteractions);
-    expect(chatModelFromEnv({ AI_PROVIDER: "gemini", ANTHROPIC_API_KEY: "a" })).toBeNull();
-    expect(chatModelFromEnv({ OPENAI_API_KEY: "k" })).toBeNull();
-    const openai = chatModelFromEnv({ AI_BASE_URL: "http://localhost:11434/v1", AI_MODEL: "llama3" }) as ChatOpenAI;
+    expect(createChatModel({ GEMINI_API_KEY: "g" })).toBeInstanceOf(GeminiChatModel);
+    expect((createChatModel({ GOOGLE_API_KEY: "g", AI_MODEL: "gemini-4-argon" }) as GeminiChatModel).model).toBe("gemini-4-argon");
+    expect(createChatModel({ ANTHROPIC_API_KEY: "a", GEMINI_API_KEY: "g", AI_PROVIDER: "gemini" })).toBeInstanceOf(GeminiChatModel);
+    expect(createChatModel({ AI_PROVIDER: "gemini", ANTHROPIC_API_KEY: "a" })).toBeNull();
+    expect(createChatModel({ OPENAI_API_KEY: "k" })).toBeNull();
+    const openai = createChatModel({ AI_BASE_URL: "http://localhost:11434/v1", AI_MODEL: "llama3" }) as ChatOpenAI;
     expect(openai).toBeInstanceOf(ChatOpenAI);
     expect(openai.useResponsesApi).toBe(true);
   });
 });
 
-describe("ChatGeminiInteractions", () => {
+describe("GeminiChatModel", () => {
   const fakeClient = (create: (...args: unknown[]) => Promise<unknown>) => ({ interactions: { create } }) as unknown as GoogleGenAI;
 
   it("calls the Interactions API and skips thought steps", async () => {
@@ -149,7 +161,7 @@ describe("ChatGeminiInteractions", () => {
         { type: "model_output", content: [{ type: "text", text: "Hel" }, { type: "text", text: "lo" }] },
       ],
     }));
-    const model = new ChatGeminiInteractions({ client: fakeClient(create), maxTokens: 100 });
+    const model = new GeminiChatModel({ client: fakeClient(create), maxTokens: 100 });
     const out = await model.invoke([new SystemMessage("s"), new HumanMessage("u1"), new AIMessage("a1"), new HumanMessage("u2")]);
     expect(out.text).toBe("Hello");
     expect(create.mock.calls[0][0]).toEqual({
@@ -167,7 +179,7 @@ describe("ChatGeminiInteractions", () => {
 
   it("turns off the SDK's silent retries and passes a cancel signal", async () => {
     const create = vi.fn<(params: unknown, opts?: unknown) => Promise<unknown>>(async () => ({ status: "completed", steps: [], output_text: "ok" }));
-    await new ChatGeminiInteractions({ client: fakeClient(create) }).invoke("hi");
+    await new GeminiChatModel({ client: fakeClient(create) }).invoke("hi");
     const opts = create.mock.calls[0][1] as { retries: unknown; fetch_options: { signal: AbortSignal } };
     expect(opts.retries).toEqual({ strategy: "none" });
     expect(opts.fetch_options.signal).toBeInstanceOf(AbortSignal);
@@ -176,7 +188,7 @@ describe("ChatGeminiInteractions", () => {
   it("retries a 503 through LangChain, then reports it", async () => {
     const overloaded = Object.assign(new Error("API error occurred"), { statusCode: 503, body: '{"error":{"message":"The model is overloaded."}}' });
     const create = vi.fn(async () => Promise.reject(overloaded));
-    const model = new ChatGeminiInteractions({ client: fakeClient(create), maxRetries: 1 });
+    const model = new GeminiChatModel({ client: fakeClient(create), maxRetries: 1 });
     await expect(model.invoke("hi")).rejects.toMatchObject({ status: 503, message: "gemini 503: The model is overloaded." });
     expect(create).toHaveBeenCalledTimes(2);
   }, 15_000);
@@ -189,13 +201,13 @@ describe("ChatGeminiInteractions", () => {
           signal.addEventListener("abort", () => reject(signal.reason));
         }),
     );
-    const model = new ChatGeminiInteractions({ client: fakeClient(create), timeoutMs: 50, maxRetries: 2 });
+    const model = new GeminiChatModel({ client: fakeClient(create), timeoutMs: 50, maxRetries: 2 });
     await expect(model.invoke("hi")).rejects.toMatchObject({ status: 504, message: "gemini: no answer after 0s" });
     expect(create).toHaveBeenCalledTimes(1);
   });
 
   it("reports interactions without an answer, and maps SDK errors", async () => {
-    const run = (result: () => Promise<unknown>) => new ChatGeminiInteractions({ client: fakeClient(result), maxRetries: 0 }).invoke("hi");
+    const run = (result: () => Promise<unknown>) => new GeminiChatModel({ client: fakeClient(result), maxRetries: 0 }).invoke("hi");
     await expect(run(async () => ({ status: "incomplete", steps: [] }))).rejects.toThrow("gemini: no answer (incomplete)");
     await expect(run(async () => ({ status: "failed", steps: [], errors: [{ message: "blocked for safety" }] }))).rejects.toThrow("blocked for safety");
     expect((await run(async () => ({ status: "completed", steps: [], output_text: "fallback" }))).text).toBe("fallback");

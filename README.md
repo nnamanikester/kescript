@@ -90,24 +90,27 @@ Go to **`/write`** (or click the pen in the header — only you see it). The edi
 
 **AI assists** appear once an AI key is set: `ANTHROPIC_API_KEY`, `GEMINI_API_KEY` (from [Google AI Studio](https://aistudio.google.com/apikey)), or `OPENAI_API_KEY`/`AI_BASE_URL` plus `AI_MODEL` for OpenAI or any server with a Responses API, including a local Ollama. `AI_MODEL` overrides the default model, and `AI_PROVIDER` picks one when several keys are set. The **wand** next to the title, the tags and the SEO description (in Settings) fills that field from the post. Click again for a different suggestion. **Select text → Ask AI** opens a prompt: type what you want ("make this friendlier", "turn into a list") or pick a quick action, then **Replace** (⌘↵), **Insert below**, **Try again**, or type a follow-up to refine the answer. ⌘Z undoes an applied change. Each request retrieves related passages from your published posts, so suggestions reuse your tags, match your titles, and can link to your other posts.
 
-It's built on **LangChain** and **LangGraph**, so the pieces are standard and reusable (`src/lib/rag`):
+It's built on **LangChain** and **LangGraph**, in two folders:
 
-- **`RAGBase`**: a LangGraph graph, `retrieve → generate → parse`, configured per task. `task.graph` is the compiled graph.
-- **Retrieval**: LangChain's `MarkdownTextSplitter` and `BM25Retriever` (wrapped as `KeywordRetriever` to make it case-insensitive). No vector database or embeddings needed, and any LangChain retriever plugs in instead, e.g. a vector store's `.asRetriever()`.
-- **Models**: `ChatAnthropic`, `ChatOpenAI` on the Responses API, and `ChatGeminiInteractions`, a small LangChain chat model for Gemini's Interactions API (LangChain's own Google package only supports `generateContent` so far). `chatModelFromEnv()` picks one from the env vars above.
+- **`src/lib/rag`**, the general toolkit:
+  - **`KeywordSearch`** splits markdown into passages (LangChain's `MarkdownTextSplitter`) and ranks them for a query with BM25. No vector database or embeddings.
+  - **`RAGBase`** is an abstract class for one task: search for passages, ask the model, then read and check its reply. A reply that breaks a rule goes back to the model with the reason. The steps run as a small LangGraph graph.
+  - **`createChatModel()`** returns `ChatAnthropic`, `ChatOpenAI` (Responses API) or `GeminiChatModel` (Gemini's Interactions API), depending on the env vars above.
+- **`src/lib/writer-ai`**, the writer's tasks: `TitleWriter`, `TagPicker`, `DescriptionWriter` and `SelectionEditor`. Each extends `BlogTask`, a `RAGBase` that searches your other published posts.
 
-`src/lib/writer-ai.ts` builds the two writer tasks on it:
+A task is a subclass that fills in a few methods:
 
 ```ts
-const task = new RAGBase<Input, Output>({
-  llm: chatModelFromEnv()!,                     // or any LangChain chat model
-  retriever: new KeywordRetriever({ docs: await splitMarkdown(docs) }),
-  instructions: "You are…",                     // string or (input) => string
-  query: (i) => i.text,                         // what to search for
-  prompt: (i, context) => `${context}\n\n${i.text}`,
-  parse: (text) => parseJSON<Output>(text),     // optional
-});
-const { output, sources } = await task.run(input);
+class Summariser extends RAGBase<{ text: string }, string> {
+  protected instructions() { return "Summarise in the author's voice."; }          // system prompt
+  protected searchQuery(input) { return input.text; }                              // optional: what to look up
+  protected prompt(input, sources) { return `${sources.map((s) => s.text).join("\n")}\n\n${input.text}`; }
+  protected parse(reply) { return reply.trim(); }                                  // reply → output
+  protected findProblem(output) { return output.length > 300 ? "Keep it under 300 characters." : null; } // optional rule
+}
+
+const search = await KeywordSearch.fromMarkdown(posts.map((p) => ({ text: p.body, meta: { slug: p.slug } })));
+const { output, sources } = await new Summariser(createChatModel()!, search).run({ text });
 ```
 
 Requires the GitHub App below. You must be signed in as an `approvedPosters` account (`src/lib/site.ts`). Everyone else gets a 404.

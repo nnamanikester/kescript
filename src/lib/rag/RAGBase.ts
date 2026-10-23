@@ -1,179 +1,118 @@
-/**
- * RAGBase: retrieval-augmented generation as a small LangGraph graph.
- *
- *   START → retrieve → generate → parse → check ─┬─→ END
- *                         ↑                       │
- *                         └── rule broken, retry ─┘
- *
- *  - retrieve: any LangChain retriever (BM25, a vector store's .asRetriever(), an EnsembleRetriever…)
- *  - generate: a ChatPromptTemplate piped into any LangChain chat model
- *  - parse:    your function from the model's text to a typed output
- *  - check:    your rules in code; a broken one goes back to the model with the reason
- *
- * Everything that varies between tasks is an option, so a task is just a
- * configured instance:
- *
- *   const summarise = new RAGBase<{ text: string }, string>({
- *     llm: chatModelFromEnv()!,
- *     retriever: new KeywordRetriever({ docs: chunks }),
- *     instructions: "Summarise in the author's voice.",
- *     query: (i) => i.text,
- *     prompt: (i, context) => `${context}\n\nSummarise:\n${i.text}`,
- *   });
- *   const { output, sources } = await summarise.run({ text });
- */
-import type { DocumentInterface } from "@langchain/core/documents";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import { AIMessage, HumanMessage, type BaseMessage } from "@langchain/core/messages";
-import { StringOutputParser } from "@langchain/core/output_parsers";
-import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
-import type { BaseRetrieverInterface } from "@langchain/core/retrievers";
+import { AIMessage, HumanMessage, SystemMessage, type BaseMessage } from "@langchain/core/messages";
 import type { RunnableConfig } from "@langchain/core/runnables";
 import { Annotation, END, START, StateGraph } from "@langchain/langgraph";
+import type { KeywordSearch, Passage } from "./KeywordSearch";
 
-export interface RAGBaseOptions<I, O> {
-  llm: BaseChatModel;
-  /** The system prompt. A function when it depends on the input. */
-  instructions: string | ((input: I) => string);
-  /** Omit for a plain prompt-and-parse task with no retrieval. */
-  retriever?: BaseRetrieverInterface;
-  /** Documents to keep after filtering. Default 6. */
-  topK?: number;
-  /** What to search for. Default: the input, if it's a string. */
-  query?: (input: I) => string;
-  /** Last say on the hits: exclude the current document, cap per source, re-rank. */
-  filter?: (docs: DocumentInterface[], input: I) => DocumentInterface[];
-  /** How retrieved documents are shown to the model. Default: numbered excerpts. */
-  formatContext?: (docs: DocumentInterface[], input: I) => string;
-  /** The user message, given the input and the formatted context. */
-  prompt: (input: I, context: string) => string;
-  /** Earlier turns to include before the prompt, e.g. few-shot examples. */
-  history?: (input: I) => BaseMessage[];
-  /** Reads the model's text into the output type. Default: trimmed text. */
-  parse?: (text: string, input: I) => O;
-  /**
-   * Rules checked in code. Return what's wrong (sent back to the model, which
-   * tries again) or nothing when the output passes.
-   */
-  validate?: (output: O, input: I) => string | null | undefined;
-  /** Model calls allowed when validate keeps failing. Default 2; the last output is returned either way. */
-  maxAttempts?: number;
-}
-
-export interface RAGResult<O> {
-  output: O;
-  /** The documents the answer was grounded in, best first. */
-  sources: DocumentInterface[];
-  /** The model's raw text, before parse(). */
-  text: string;
-  /** Model calls made: more than 1 when validate sent an answer back. */
+export interface RAGResult<Output, Meta> {
+  output: Output;
+  /** The passages the model was shown. */
+  sources: Passage<Meta>[];
+  /** How many times the model was asked: more than 1 when findProblem sent an answer back. */
   attempts: number;
-  /** What validate still objected to after the last attempt, if anything. */
+  /** What findProblem still objected to after the last attempt, or null. */
   problem: string | null;
 }
 
-export function defaultFormatContext(docs: DocumentInterface[]): string {
-  return docs.map((d, i) => `[${i + 1}]\n${d.pageContent}`).join("\n\n---\n\n");
-}
-
-/** system → (history) → user. Values are passed as variables, so braces in them are never templated. */
-const PROMPT = ChatPromptTemplate.fromMessages([
-  ["system", "{instructions}"],
-  new MessagesPlaceholder("history"),
-  ["human", "{request}"],
-]);
-
-export class RAGBase<I, O = string> {
-  /** The compiled LangGraph graph. `graph.getGraph().drawMermaidPng()` draws it. */
-  readonly graph;
-
-  constructor(readonly options: RAGBaseOptions<I, O>) {
-    const State = Annotation.Root({
-      input: Annotation<I>,
-      sources: Annotation<DocumentInterface[]>,
-      text: Annotation<string>,
-      output: Annotation<O>,
-      attempts: Annotation<number>,
-      /** Why validate rejected the last answer; the next generate sees it. */
-      problem: Annotation<string | null>,
-    });
-    type S = typeof State.State;
-
-    const retrieve = async ({ input }: S, config?: RunnableConfig) => ({ sources: await this.retrieve(input, config) });
-
-    const generate = async ({ input, sources, text: previous, problem, attempts }: S, config?: RunnableConfig) => {
-      const o = this.options;
-      const chain = PROMPT.pipe(o.llm).pipe(new StringOutputParser());
-      const request = o.prompt(input, (o.formatContext ?? defaultFormatContext)(sources, input));
-      const history = o.history?.(input) ?? [];
-      const text = await chain.invoke(
-        {
-          instructions: typeof o.instructions === "function" ? o.instructions(input) : o.instructions,
-          // A retry continues the conversation: the request, the rejected answer, then what was wrong with it.
-          history: problem ? [...history, new HumanMessage(request), new AIMessage(previous)] : history,
-          request: problem ? `That breaks a rule: ${problem} Reply again in the same format, fixing it.` : request,
-        },
-        config,
-      );
-      return { text, attempts: (attempts ?? 0) + 1 };
-    };
-
-    const parse = ({ input, text }: S) => ({ output: this.options.parse ? this.options.parse(text, input) : (text.trim() as O) });
-
-    const check = ({ input, output }: S) => ({ problem: this.options.validate?.(output, input) || null });
-
-    const next = ({ problem, attempts }: S) => (problem && attempts < (this.options.maxAttempts ?? 2) ? "generate" : END);
-
-    this.graph = new StateGraph(State)
-      .addNode("retrieve", retrieve)
-      .addNode("generate", generate)
-      .addNode("parse", parse)
-      .addNode("check", check)
-      .addEdge(START, "retrieve")
-      .addEdge("retrieve", "generate")
-      .addEdge("generate", "parse")
-      .addEdge("parse", "check")
-      .addConditionalEdges("check", next, ["generate", END])
-      .compile();
-  }
-
-  /** A copy with some options replaced: another model, other instructions, more context. */
-  with(overrides: Partial<RAGBaseOptions<I, O>>): RAGBase<I, O> {
-    return new RAGBase({ ...this.options, ...overrides });
-  }
-
-  async retrieve(input: I, config?: RunnableConfig): Promise<DocumentInterface[]> {
-    const { retriever, topK = 6, query, filter } = this.options;
-    if (!retriever) return [];
-    const q = query ? query(input) : typeof input === "string" ? input : "";
-    if (!q.trim()) return [];
-    const docs = await retriever.invoke(q, config);
-    return (filter ? filter(docs, input) : docs).slice(0, topK);
-  }
-
-  /** Runs the graph. `signal` cancels the model call when the client goes away. */
-  async run(input: I, { signal }: { signal?: AbortSignal } = {}): Promise<RAGResult<O>> {
-    const state = await this.graph.invoke({ input, attempts: 0, problem: null }, { signal });
-    return { output: state.output as O, sources: state.sources ?? [], text: state.text, attempts: state.attempts, problem: state.problem };
-  }
-}
+/** What the graph carries from step to step. */
+const RAGState = Annotation.Root({
+  input: Annotation<unknown>,
+  sources: Annotation<Passage<unknown>[]>,
+  messages: Annotation<BaseMessage[]>,
+  reply: Annotation<string>,
+  output: Annotation<unknown>,
+  problem: Annotation<string | null>,
+  attempts: Annotation<number>,
+});
+type State = typeof RAGState.State;
 
 /**
- * Pull a JSON value out of a model reply that may wrap it in prose or a code
- * fence. Throws when there's nothing parseable.
+ * Retrieval-augmented generation: look up related passages, ask the model with
+ * them in the prompt, then read and check its reply.
+ *
+ *   START → retrieve → generate → check → END
+ *                         ↑         │
+ *                         └─────────┘  when findProblem() objects, up to maxAttempts
+ *
+ * A task is a subclass. It must say what to tell the model (instructions,
+ * prompt) and how to read the reply (parse). It can also say what to search
+ * for (searchQuery), which passages to keep (pickSources) and what counts as a
+ * broken answer (findProblem).
  */
-export function parseJSON<T>(text: string): T {
-  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i)?.[1];
-  const candidate = fenced ?? text;
-  const start = candidate.search(/[[{]/);
-  if (start === -1) throw new Error("The model didn't return JSON");
-  const open = candidate[start];
-  const end = candidate.lastIndexOf(open === "{" ? "}" : "]");
-  return JSON.parse(candidate.slice(start, end + 1)) as T;
-}
+export abstract class RAGBase<Input, Output, Meta = unknown> {
+  /** Model calls allowed when findProblem keeps objecting. */
+  protected maxAttempts = 2;
 
-/** Strip a single code fence wrapped around a whole reply. */
-export function unfence(text: string): string {
-  const m = text.trim().match(/^```[\w-]*\n([\s\S]*?)\n?```$/);
-  return (m ? m[1] : text).trim();
+  private readonly graph = new StateGraph(RAGState)
+    .addNode("retrieve", (state) => this.retrieveStep(state))
+    .addNode("generate", (state, config) => this.generateStep(state, config))
+    .addNode("check", (state) => this.checkStep(state))
+    .addEdge(START, "retrieve")
+    .addEdge("retrieve", "generate")
+    .addEdge("generate", "check")
+    .addConditionalEdges("check", (state) => (state.problem && state.attempts < this.maxAttempts ? "generate" : END), ["generate", END])
+    .compile();
+
+  constructor(
+    protected readonly llm: BaseChatModel,
+    protected readonly search?: KeywordSearch<Meta>,
+  ) {}
+
+  /* ─────────── what each task defines ─────────── */
+
+  /** The system prompt: the task's rules. */
+  protected abstract instructions(input: Input): string;
+
+  /** The user message, built from the input and the passages that were found. */
+  protected abstract prompt(input: Input, sources: Passage<Meta>[]): string;
+
+  /** Turns the model's reply into the output. Throw when the reply is unusable. */
+  protected abstract parse(reply: string, input: Input): Output;
+
+  /** What to search the passages for. Leave it out for no search. */
+  protected searchQuery?(input: Input): string;
+
+  /** Which of the found passages (best first) go into the prompt. Default: the first 5. */
+  protected pickSources?(found: Passage<Meta>[], input: Input): Passage<Meta>[];
+
+  /** A rule the output breaks, to send back to the model, or null when it's fine. Leave it out for no rules. */
+  protected findProblem?(output: Output, input: Input): string | null;
+
+  /* ─────────── running it ─────────── */
+
+  /** Runs the task. `signal` cancels the model call, e.g. when the browser goes away. */
+  async run(input: Input, signal?: AbortSignal): Promise<RAGResult<Output, Meta>> {
+    const state = await this.graph.invoke({ input, attempts: 0, problem: null, messages: [] }, { signal });
+    return {
+      output: state.output as Output,
+      sources: state.sources as Passage<Meta>[],
+      attempts: state.attempts,
+      problem: state.problem,
+    };
+  }
+
+  /** Find passages related to the input. */
+  private async retrieveStep(state: State) {
+    const input = state.input as Input;
+    const query = this.searchQuery?.(input) ?? "";
+    const found = this.search && query.trim() ? await this.search.find(query) : [];
+    return { sources: this.pickSources?.(found, input) ?? found.slice(0, 5) };
+  }
+
+  /** Ask the model. A retry continues the conversation: its last reply, then what was wrong with it. */
+  private async generateStep(state: State, config: RunnableConfig) {
+    const input = state.input as Input;
+    const messages = state.problem
+      ? [...state.messages, new AIMessage(state.reply), new HumanMessage(`That breaks a rule: ${state.problem} Reply again in the same format, fixing it.`)]
+      : [new SystemMessage(this.instructions(input)), new HumanMessage(this.prompt(input, state.sources as Passage<Meta>[]))];
+    const reply = await this.llm.invoke(messages, config);
+    return { messages, reply: reply.text, attempts: state.attempts + 1 };
+  }
+
+  /** Read the reply and look for broken rules. */
+  private checkStep(state: State) {
+    const input = state.input as Input;
+    const output = this.parse(state.reply, input);
+    return { output, problem: this.findProblem?.(output, input) ?? null };
+  }
 }

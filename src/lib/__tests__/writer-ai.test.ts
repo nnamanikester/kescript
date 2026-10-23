@@ -73,6 +73,11 @@ describe("suggestMeta", () => {
     expect(sent().user).toContain("[…middle of the post omitted…]");
   });
 
+  it("accepts tags given as one comma-separated string", async () => {
+    const { llm } = fake('{"tags": "react-native, Performance"}');
+    expect(await suggestMeta("tags", draft, { llm })).toEqual({ tags: ["react-native", "performance"] });
+  });
+
   it("rejects an answer without the field", async () => {
     const { llm } = fake('{"title": ""}');
     await expect(suggestMeta("title", draft, { llm })).rejects.toThrow(/didn't return a title/);
