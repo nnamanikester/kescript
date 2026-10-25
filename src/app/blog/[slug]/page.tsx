@@ -10,7 +10,8 @@ import { processPost } from "@/lib/markdown/pipeline";
 import { FEEDS } from "@/lib/seo";
 import { getPublicThread } from "@/lib/github";
 import { SITE } from "@/lib/site";
-import { formatDate } from "@/lib/utils";
+import { compactNumber, formatDate } from "@/lib/utils";
+import { getViews, postPath } from "@/lib/views";
 import { PostBody } from "@/components/post/PostBody";
 import { TableOfContents } from "@/components/post/TableOfContents";
 import { ReadingHud } from "@/components/post/ReadingHud";
@@ -71,11 +72,12 @@ export default async function PostPage(props: PageProps<"/blog/[slug]">) {
   const post = await getPost(slug);
   if (!post) notFound();
 
-  const [{ tree, headings }, all, related, thread] = await Promise.all([
+  const [{ tree, headings }, all, related, thread, views] = await Promise.all([
     processPost(post.body),
     getPostMetas(),
     getRelated(post, 3),
     post.issueNumber ? getPublicThread(post.issueNumber).catch(() => null) : Promise.resolve(null),
+    getViews(postPath(post.slug)),
   ]);
   const i = all.findIndex((p) => p.slug === slug);
   const newer = i > 0 ? all[i - 1] : null;
@@ -121,6 +123,11 @@ export default async function PostPage(props: PageProps<"/blog/[slug]">) {
             <time dateTime={post.date}>{formatDate(post.date)}</time>
             {post.updated && post.updated !== post.date && <span>updated {formatDate(post.updated)}</span>}
             <span>{post.readingMinutes} min read</span>
+            {views ? (
+              <span title={`${views.toLocaleString("en-US")} unique visitors`}>
+                {compactNumber(views)} {views === 1 ? "view" : "views"}
+              </span>
+            ) : null}
             <span className="hidden sm:inline">{post.words.toLocaleString("en-US")} words</span>
             {post.issueNumber && (
               <span className="sm:ml-auto">

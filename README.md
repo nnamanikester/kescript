@@ -48,6 +48,10 @@ featured: true
 
 A category is a repo label named `category:<Name>`, e.g. `category:Case Study`. To create one, add the label on GitHub (Issues → Labels → New label) or with `gh label create "category:Case Study"`. You can also type a new name into the `~/blog/…` field in the writer, which creates the label when it saves. A post's `category:` label wins over frontmatter. A post with neither is a `Note`. The writer suggests every category label, including ones no post uses yet. The `/blog` filters only show categories that have posts.
 
+### View counts
+
+Posts show unique visitors from [GoatCounter](https://www.goatcounter.com), with no database involved. Create a site, set `NEXT_PUBLIC_GOATCOUNTER_CODE` to its code, and turn on Settings → "Allow adding visitor counts on your website". Counts can lag by a few hours because GoatCounter and the site both cache them. Visits to `/write` aren't counted, and neither is local dev. To stop counting your own visits, open `https://kescript.com/#toggle-goatcounter` once in each browser you use.
+
 ### What markdown can do
 
 Everything GitHub renders, plus more. Open **`/styleguide`** on the running site next to [`content/styleguide.md`](content/styleguide.md) to see the source and the result side by side. Highlights:

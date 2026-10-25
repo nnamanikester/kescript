@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { MessageSquare } from "lucide-react";
 import { getMostDiscussed, getSearchDocs } from "@/lib/content";
+import { getPostViews } from "@/lib/views";
 import { BlogIndex } from "@/components/blog/BlogIndex";
 import { PostArchive } from "@/components/blog/PostRow";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -20,7 +21,9 @@ export const metadata: Metadata = pageMetadata({
 });
 
 export default async function BlogPage() {
-  const [docs, discussed] = await Promise.all([getSearchDocs(), getMostDiscussed(3)]);
+  const [plain, discussed] = await Promise.all([getSearchDocs(), getMostDiscussed(3)]);
+  const views = await getPostViews(plain.map((d) => d.slug));
+  const docs = plain.map((d) => ({ ...d, views: views[d.slug] }));
   const words = docs.reduce((n, d) => n + d.words, 0);
 
   const featured =

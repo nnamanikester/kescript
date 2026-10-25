@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { PostMeta } from "@/lib/content";
+import { compactNumber } from "@/lib/utils";
 
 /** One line per post: date, title, category. Scannable like a changelog. */
 export function PostRow({ post, snippet, showYear = false }: { post: PostMeta; snippet?: ReactNode; showYear?: boolean }) {
@@ -19,6 +20,9 @@ export function PostRow({ post, snippet, showYear = false }: { post: PostMeta; s
         </span>
         <span className="hidden font-mono text-[0.72rem] text-faint sm:block">
           {post.categoryName.toLowerCase()}
+          {post.views ? (
+            <span title={`${post.views.toLocaleString("en-US")} unique visitors`}> · {compactNumber(post.views)}</span>
+          ) : null}
         </span>
       </Link>
     </li>

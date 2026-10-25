@@ -6,6 +6,7 @@ import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { CommandPalette } from "@/components/site/CommandPalette";
 import { Enhancers } from "@/components/site/Enhancers";
+import { GoatCounter } from "@/components/site/GoatCounter";
 import { SiteJsonLd } from "@/components/site/JsonLd";
 import { themeScript } from "@/components/site/theme";
 import { viewTransitionGuardScript } from "@/components/site/view-transitions";
@@ -80,6 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <CommandPalette />
         <Enhancers />
         <Analytics />
+        {process.env.NEXT_PUBLIC_GOATCOUNTER_CODE && <GoatCounter code={process.env.NEXT_PUBLIC_GOATCOUNTER_CODE} />}
       </body>
     </html>
   );

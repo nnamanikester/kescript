@@ -47,6 +47,8 @@ export interface PostMeta {
   issueUrl?: string;
   reactionCount: number;
   commentCount: number;
+  /** Unique visitors, attached by pages that show them (see lib/views). */
+  views?: number;
 }
 
 export interface Post extends PostMeta {

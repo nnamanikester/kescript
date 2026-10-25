@@ -15,6 +15,13 @@ export function slugify(text: string | number): string {
     .replace(/(^-|-$)/g, "");
 }
 
+const COMPACT = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 });
+
+/** 1234 -> "1.2k". */
+export function compactNumber(n: number): string {
+  return COMPACT.format(n).toLowerCase();
+}
+
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 /** "2025-03-05" -> "Mar 5, 2025". Pure string maths: identical on server and client. */
