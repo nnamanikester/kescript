@@ -10,6 +10,7 @@ import type { Root as HRoot, Element, ElementContent } from "hast";
 import { visit, SKIP } from "unist-util-visit";
 import { toString as hastToString } from "hast-util-to-string";
 import { toString as mdToString } from "mdast-util-to-string";
+import { splitImageWidth } from "./image-width";
 
 /* ───────────────────────────── remark (mdast) ───────────────────────────── */
 
@@ -262,6 +263,11 @@ export function rehypeFigures() {
       if (!isElement(img, "img")) return;
       const caption = String(img.properties.title ?? "");
       delete img.properties.title;
+      const { src, width } = splitImageWidth(String(img.properties.src ?? ""));
+      if (width) {
+        img.properties.src = src;
+        img.properties.style = `width:${width}%`;
+      }
       const figure: Element = {
         type: "element",
         tagName: "figure",

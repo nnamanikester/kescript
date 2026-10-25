@@ -152,7 +152,7 @@ export const SLASH_ITEMS: SlashItem[] = [
     keywords: "details summary toggle accordion",
     run: (e, r) =>
       chain(e, r)
-        .insertContent({ type: "rawBlock", attrs: { source: "<details>\n<summary>Title</summary>\n\nHidden content — markdown works here.\n\n</details>" } })
+        .insertContent({ type: "details", attrs: { summary: "", open: false }, content: [{ type: "paragraph" }] })
         .run(),
   },
   { title: "Markdown / HTML", hint: "Write it raw", group: "More", icon: FileCode2, keywords: "raw html markdown source", run: (e, r) => chain(e, r).insertContent({ type: "rawBlock" }).run() },

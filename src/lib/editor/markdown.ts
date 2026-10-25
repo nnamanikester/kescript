@@ -17,6 +17,7 @@ import remarkMath from "remark-math";
 import remarkStringify from "remark-stringify";
 import { toString as mdToString } from "mdast-util-to-string";
 import type { JSONContent } from "@tiptap/core";
+import { splitImageWidth, withImageWidth } from "@/lib/markdown/image-width";
 import type {
   AlignType,
   BlockContent,
@@ -159,7 +160,8 @@ function paragraphBlock(p: Paragraph): JSONContent {
     return { type: "embed", attrs: { url: only.url, kind: embedKind(only.url) } };
   }
   if (only?.type === "image") {
-    return { type: "figure", attrs: { src: only.url, alt: only.alt ?? "", caption: only.title ?? "" } };
+    const { src, width } = splitImageWidth(only.url);
+    return { type: "figure", attrs: { src, alt: only.alt ?? "", caption: only.title ?? "", width } };
   }
   return paragraph(inline(p.children));
 }
@@ -227,10 +229,62 @@ function isMarker(node: Flow | undefined, re: RegExp): boolean {
   return node?.type === "paragraph" && re.test(mdToString(node).trim());
 }
 
+/* <details><summary>…</summary> … </details>: markdown between the tags becomes editable blocks. */
+const DETAILS_OPEN = /^<details(\s+open\b[^>]*)?\s*>\s*(?:<summary>([\s\S]*?)<\/summary>)?\s*/i;
+const DETAILS_CLOSE = /^<\/details>\s*$/i;
+
+/** Containers end on a paragraph in the editor, so there's always a line to type on after an image or table. */
+function withTail(inner: JSONContent[]): JSONContent[] {
+  return inner.at(-1)?.type === "paragraph" ? inner : [...inner, { type: "paragraph" }];
+}
+
+function detailsBlock(open: boolean, summary: string | undefined, inner: JSONContent[]): JSONContent {
+  return { type: "details", attrs: { summary: summary?.trim() || "Details", open }, content: withTail(inner) };
+}
+
+/** A whole <details> written as one HTML block, with no blank lines inside. */
+function detailsInOne(value: string): JSONContent | null {
+  const head = value.match(DETAILS_OPEN);
+  if (!head || !/<\/details>\s*$/i.test(value)) return null;
+  const body = value.slice(head[0].length).replace(/<\/details>\s*$/i, "");
+  if (/<\/?details\b/i.test(body)) return null;
+  return detailsBlock(Boolean(head[1]), head[2], blocks((processor.parse(body) as Root).children as Flow[]));
+}
+
+/** Index of the `</details>` that closes the one opened just before `from`, minding nesting. */
+function detailsEnd(nodes: Flow[], from: number): number {
+  let depth = 1;
+  for (let j = from; j < nodes.length; j++) {
+    const n = nodes[j];
+    if (n.type !== "html") continue;
+    if (DETAILS_CLOSE.test(n.value.trim())) depth--;
+    else if (/^<details\b/i.test(n.value) && !/<\/details>\s*$/i.test(n.value)) depth++;
+    if (depth === 0) return j;
+  }
+  return -1;
+}
+
 function blocks(nodes: Flow[]): JSONContent[] {
   const out: JSONContent[] = [];
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i];
+
+    if (node.type === "html") {
+      const head = node.value.match(DETAILS_OPEN);
+      if (head && head[0].length === node.value.length) {
+        const end = detailsEnd(nodes, i + 1);
+        if (end !== -1) {
+          out.push(detailsBlock(Boolean(head[1]), head[2], blocks(nodes.slice(i + 1, end))));
+          i = end;
+          continue;
+        }
+      }
+      const whole = detailsInOne(node.value);
+      if (whole) {
+        out.push(whole);
+        continue;
+      }
+    }
 
     // :::code-group … ::: — fenced blocks between two marker paragraphs.
     if (isMarker(node, /^:::[ \t]*code-group\b/)) {
@@ -247,7 +301,7 @@ function blocks(nodes: Flow[]): JSONContent[] {
     const kind = calloutKind(node);
     if (kind && node.type === "blockquote") {
       const inner = blocks(stripCalloutMarker(node.children as Flow[]));
-      out.push({ type: "callout", attrs: { kind }, content: inner.length ? inner : [{ type: "paragraph" }] });
+      out.push({ type: "callout", attrs: { kind }, content: withTail(inner) });
       continue;
     }
 
@@ -399,11 +453,19 @@ function toFlow(nodes: JSONContent[]): Flow[] {
         return [{ type: "thematicBreak" }];
       case "blockquote":
         return [{ type: "blockquote", children: toFlow(node.content ?? []) as BlockContent[] }];
+      case "details": {
+        const summary = String(node.attrs?.summary ?? "").trim() || "Details";
+        return [
+          html(`<details${node.attrs?.open ? " open" : ""}>\n<summary>${summary}</summary>`),
+          ...toFlow(trimEmpty(node.content ?? [])),
+          html("</details>"),
+        ];
+      }
       case "callout":
         return [
           {
             type: "blockquote",
-            children: [html(`[!${String(node.attrs?.kind ?? "note").toUpperCase()}]`), ...toFlow(node.content ?? [])] as BlockContent[],
+            children: [html(`[!${String(node.attrs?.kind ?? "note").toUpperCase()}]`), ...toFlow(trimEmpty(node.content ?? []))] as BlockContent[],
           },
         ];
       case "bulletList":
@@ -422,7 +484,7 @@ function toFlow(nodes: JSONContent[]): Flow[] {
         return [
           {
             type: "paragraph",
-            children: [{ type: "image", url: src, alt: String(node.attrs?.alt ?? ""), title: (node.attrs?.caption as string) || null }],
+            children: [{ type: "image", url: withImageWidth(src, node.attrs?.width as number | null), alt: String(node.attrs?.alt ?? ""), title: (node.attrs?.caption as string) || null }],
           },
         ];
       }

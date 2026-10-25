@@ -3,10 +3,11 @@
  * understands (see src/lib/editor/markdown.ts), and renders with the same
  * classes the published post uses — so the editor *is* the post.
  */
-import { InputRule, mergeAttributes, Node, type Extensions } from "@tiptap/core";
+import { Extension, InputRule, mergeAttributes, Node, type Editor, type Extensions } from "@tiptap/core";
+import { Plugin, PluginKey, TextSelection } from "@tiptap/pm/state";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { Placeholder } from "@tiptap/extensions";
+import { Placeholder, TrailingNode } from "@tiptap/extensions";
 import { TaskItem, TaskList } from "@tiptap/extension-list";
 import { Table, TableCell, TableHeader, TableRow } from "@tiptap/extension-table";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
@@ -14,6 +15,7 @@ import { common, createLowlight } from "lowlight";
 import { CalloutView } from "./nodes/CalloutView";
 import { CodeBlockView } from "./nodes/CodeBlockView";
 import { CodeGroupView } from "./nodes/CodeGroupView";
+import { DetailsView } from "./nodes/DetailsView";
 import { EmbedView } from "./nodes/EmbedView";
 import { FigureView } from "./nodes/FigureView";
 import { FootnoteRefView, MathInlineView, RawInlineView } from "./nodes/InlineViews";
@@ -45,6 +47,74 @@ const CodeBlock = CodeBlockLowlight.extend({
     return ReactNodeViewRenderer(CodeBlockView);
   },
 }).configure({ lowlight, defaultLanguage: null, enableTabIndentation: true, tabSize: 2 });
+
+/**
+ * Enter on an empty last line inside a container block steps out below it,
+ * the way it leaves a list. That's how you get back to writing after a
+ * collapsible or callout.
+ */
+function exitOnEmptyLast(editor: Editor, names: string[]): boolean {
+  const { state } = editor;
+  const { $from, empty } = state.selection;
+  if (!empty || $from.depth < 2) return false;
+  const wrap = $from.node(-1);
+  if (!names.includes(wrap.type.name) || $from.parent.type.name !== "paragraph" || $from.parent.content.size) return false;
+  if (wrap.childCount < 2 || $from.index(-1) !== wrap.childCount - 1) return false;
+  const tr = state.tr.delete($from.before(), $from.after());
+  const after = tr.mapping.map($from.after(-1));
+  tr.insert(after, state.schema.nodes.paragraph.create());
+  tr.setSelection(TextSelection.create(tr.doc, after + 1)).scrollIntoView();
+  editor.view.dispatch(tr);
+  return true;
+}
+
+const Details = Node.create({
+  name: "details",
+  group: "block",
+  content: "block+",
+  defining: true,
+  addAttributes: () => ({
+    summary: attr("summary", ""),
+    open: attr("open", false, (v) => v === "true"),
+  }),
+  parseHTML: () => [{ tag: "div[data-details]" }],
+  renderHTML: ({ HTMLAttributes }) => ["div", mergeAttributes(HTMLAttributes, { "data-details": "" }), 0],
+  addNodeView: () => ReactNodeViewRenderer(DetailsView),
+});
+
+const CONTAINERS = ["details", "callout"];
+
+/**
+ * Its own extension so Enter runs before the built-in one (which would just add
+ * another empty line). It also keeps a line to type on at the end of every
+ * container: an image or table there would otherwise leave nowhere to click.
+ */
+const Containers = Extension.create({
+  name: "containers",
+  priority: 1000,
+  addKeyboardShortcuts() {
+    return { Enter: () => exitOnEmptyLast(this.editor, CONTAINERS) };
+  },
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: new PluginKey("containerTail"),
+        appendTransaction: (trs, _old, state) => {
+          if (!trs.some((t) => t.docChanged)) return null;
+          const ends: number[] = [];
+          state.doc.descendants((node, pos) => {
+            if (CONTAINERS.includes(node.type.name) && node.lastChild?.type.name !== "paragraph") ends.push(pos + node.nodeSize - 1);
+          });
+          if (!ends.length) return null;
+          const tr = state.tr;
+          // Back to front, so earlier positions stay valid.
+          for (const end of ends.reverse()) tr.insert(end, state.schema.nodes.paragraph.create());
+          return tr;
+        },
+      }),
+    ];
+  },
+});
 
 const Callout = Node.create({
   name: "callout",
@@ -94,7 +164,12 @@ const Figure = Node.create<{ upload: UploadFn | null }>({
   selectable: true,
   draggable: true,
   addOptions: () => ({ upload: null }),
-  addAttributes: () => ({ src: attr("src", ""), alt: attr("alt", ""), caption: attr("caption", "") }),
+  addAttributes: () => ({
+    src: attr("src", ""),
+    alt: attr("alt", ""),
+    caption: attr("caption", ""),
+    width: attr<number | null>("width", null, (v) => Number(v) || null),
+  }),
   parseHTML: () => [
     { tag: 'div[data-type="figure"]' },
     // Images pasted from elsewhere on the web.
@@ -155,6 +230,10 @@ export function editorExtensions({ upload }: { upload: UploadFn }): Extensions {
     CodeBlock,
     CodeGroup,
     Callout,
+    Details,
+    Containers,
+    // Always a line after the last block, so you can keep writing below a collapsible, table or image.
+    TrailingNode,
     Figure.configure({ upload }),
     atom("embed", { url: attr("url", ""), kind: attr("kind", "") }, EmbedView),
     atom("mathBlock", { latex: attr("latex", "") }, MathBlockView),

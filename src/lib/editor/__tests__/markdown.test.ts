@@ -54,17 +54,44 @@ describe("editor markdown bridge", () => {
       "embed",
       "figure",
       "mathBlock",
-      "rawBlock",
-      "paragraph",
-      "rawBlock",
+      "details",
     ]);
     expect(doc.content?.[0].attrs).toEqual({ kind: "warning" });
-    expect(doc.content?.[4].attrs).toEqual({ src: "https://e.com/a.png", alt: "Alt", caption: "Caption" });
+    expect(doc.content?.[4].attrs).toEqual({ src: "https://e.com/a.png", alt: "Alt", caption: "Caption", width: null });
   });
 
   it("serialises marks without splitting links", () => {
     const md = "See [the **bold** docs](https://e.com) and `code` with ~~old~~ _new_.\n";
     expect(roundTrip(md)).toBe(md);
+  });
+
+  it("keeps an image's width in its URL fragment", () => {
+    const md = '![Alt](https://e.com/a.png#w=60 "Caption")\n';
+    expect(roundTrip(md)).toBe(md);
+  });
+
+  it("turns <details> into an editable block, images and all", () => {
+    const md = '<details open>\n<summary>More</summary>\n\nSome **text**.\n\n![a](https://e.com/a.png)\n\n</details>\n';
+    const doc = markdownToDoc(md);
+    expect(doc.content?.[0]).toMatchObject({ type: "details", attrs: { summary: "More", open: true } });
+    expect(doc.content?.[0].content?.map((n) => n.type)).toEqual(["paragraph", "figure", "paragraph"]);
+    expect(roundTrip(md)).toBe(md);
+  });
+
+  it("handles nested and one-piece <details>", () => {
+    const nested = "<details>\n<summary>Out</summary>\n\n<details>\n<summary>In</summary>\n\nDeep\n\n</details>\n\n</details>\n";
+    const doc = markdownToDoc(nested);
+    expect(doc.content).toHaveLength(1);
+    expect(doc.content?.[0].content?.[0]).toMatchObject({ type: "details", attrs: { summary: "In" } });
+    expect(roundTrip(nested)).toBe(nested);
+
+    const tight = markdownToDoc("<details><summary>T</summary>Hidden</details>");
+    expect(tight.content?.[0]).toMatchObject({ type: "details", attrs: { summary: "T", open: false } });
+    expect(docToMarkdown(tight)).toBe("<details>\n<summary>T</summary>\n\nHidden\n\n</details>\n");
+  });
+
+  it("leaves an unclosed <details> as raw HTML", () => {
+    expect(markdownToDoc("<details>\n<summary>T</summary>\n\nNo end").content?.[0].type).toBe("rawBlock");
   });
 
   it("drops images still uploading and empty trailing paragraphs", () => {

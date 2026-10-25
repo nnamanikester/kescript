@@ -65,6 +65,12 @@ describe("post pipeline", () => {
     expect(out).toContain("<figcaption>Caption</figcaption>");
   });
 
+  it("sizes figures from the URL fragment", async () => {
+    const { out } = await html('![alt](/a.png#w=60 "Caption")');
+    expect(out).toContain('src="/a.png"');
+    expect(out).toContain('style="width:60%"');
+  });
+
   it("collects h2/h3 headings with ids", async () => {
     const { headings, out } = await html("## First `thing`\n\n### Sub\n\n#### Deep");
     expect(headings).toEqual([

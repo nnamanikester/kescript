@@ -1062,6 +1062,11 @@ html.theme-reveal::view-transition-new(root) {
 .writer-prose th {
   position: relative;
   vertical-align: top;
+  min-width: 4rem;
+}
+/* Column lines while editing, so empty cells are findable. Posts keep the clean look. */
+.writer-prose :where(td, th) + :where(td, th) {
+  border-left: 1px solid var(--border);
 }
 .writer-prose :where(td, th) > p {
   margin: 0;
@@ -1089,6 +1094,33 @@ html.theme-reveal::view-transition-new(root) {
 .writer-caption::placeholder {
   color: var(--fg-subtle);
   opacity: 0.5;
+}
+
+/* Collapsible */
+.writer-details {
+  margin-block: 1.5em;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.5em 1em 0.7em 0.6em;
+  background: var(--bg-elev);
+}
+.writer-details-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+.writer-details-body {
+  padding-left: 1.9em;
+  margin-top: 0.4em;
+}
+.writer-details-body > [data-node-view-content-react] > :first-child {
+  margin-top: 0;
+}
+.writer-details-body > [data-node-view-content-react] > :last-child {
+  margin-bottom: 0;
+}
+.writer-details[data-folded] .writer-details-body {
+  display: none;
 }
 
 /* Maths, raw markdown, inline atoms */

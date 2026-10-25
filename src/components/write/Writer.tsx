@@ -37,6 +37,7 @@ import { PostBody } from "@/components/post/PostBody";
 import { editorExtensions } from "./extensions";
 import { BubbleBar, EDIT_LINK_EVENT } from "./BubbleBar";
 import { SlashMenu } from "./SlashMenu";
+import { TableBar } from "./TableBar";
 import { HeaderFields, type Meta } from "./HeaderFields";
 import { SettingsSheet } from "./SettingsSheet";
 import { imageFiles, uploadImage } from "./upload";
@@ -707,6 +708,7 @@ export default function Writer({
       )}
 
       {editor && <BubbleBar editor={editor} ai={ai ? { title: meta.title, slug } : undefined} />}
+      {editor && <TableBar editor={editor} />}
       <SlashMenu />
 
       <SettingsSheet
