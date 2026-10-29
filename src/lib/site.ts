@@ -11,7 +11,7 @@ export const SITE = {
   tagline: "Notes to a younger me, on building software.",
   description:
     "Letters to a younger me, sent a month or five years too late. John Nnamani on building things — software, habits and life — so you only learn them once.",
-  url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://kescript.com").replace(/\/$/, ""),
+  url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.kescript.com").replace(/\/$/, ""),
   email: "nnamanikester@gmail.com",
   location: "Lisbon, Portugal",
   links: {
